@@ -8,6 +8,8 @@ A RESTful Web Service implementing the [SignService Integration API](https://git
 
 ---
 
+> **Note:** Under development. Will be ready in a first version September 2020. Meanwhile, check out the [API Documentation](https://idsec-solutions.github.io/signservice-integration-api/).
+
 ## About
 
 TODO

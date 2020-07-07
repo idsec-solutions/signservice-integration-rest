@@ -38,15 +38,23 @@
 			<dependency>
 				<groupId>se.idsec.signservice.integration</groupId>
 				<artifactId>signservice-integration-api</artifactId>
-				<version>1.0.2</version>
+				<version>1.0.3</version>
 				<type>jar</type>
 				<scope>compile</scope>
 			</dependency>
+      
+      <dependency>
+        <groupId>se.idsec.signservice.commons</groupId>
+        <artifactId>signservice-commons</artifactId>
+        <version>1.0.3</version>
+        <type>jar</type>
+        <scope>compile</scope>
+      </dependency>
 
 			<dependency>
 				<groupId>se.idsec.signservice.integration</groupId>
 				<artifactId>signservice-integration-impl</artifactId>
-				<version>1.0.0-SNAPSHOT</version>
+				<version>1.0.3-SNAPSHOT</version>
 				<type>jar</type>
 				<scope>compile</scope>
 			</dependency>
@@ -54,17 +62,29 @@
 			<dependency>
 				<groupId>se.idsec.signservice.integration</groupId>
 				<artifactId>signservice-integration-xml</artifactId>
-				<version>1.0.0-SNAPSHOT</version>
+				<version>1.0.2</version>
 				<type>jar</type>
 				<scope>compile</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>se.idsec.signservice.integration</groupId>
+            <artifactId>signservice-integration-impl</artifactId>
+          </exclusion>
+        </exclusions>
 			</dependency>
 
 			<dependency>
 				<groupId>se.idsec.signservice.integration</groupId>
 				<artifactId>signservice-integration-pdf</artifactId>
-				<version>1.0.0-SNAPSHOT</version>
+				<version>1.0.3-SNAPSHOT</version>
 				<type>jar</type>
 				<scope>compile</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>se.idsec.signservice.integration</groupId>
+            <artifactId>signservice-integration-impl</artifactId>
+          </exclusion>
+        </exclusions>
 			</dependency>
 
 		</dependencies>
@@ -77,6 +97,11 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
+    
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>    
 
     <dependency>
       <groupId>org.springframework.boot</groupId>

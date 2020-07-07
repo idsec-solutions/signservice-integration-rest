@@ -20,6 +20,7 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
@@ -35,15 +36,20 @@ import se.idsec.signservice.integration.security.impl.OpenSAMLEncryptionParamete
  * @author Martin Lindström (martin@idsec.se)
  */
 @Component
+@DependsOn(value = {"DefaultSigningCredential", "nameToSigningCredentialConverter", "propertyToX509CertificateConverter"})
 @PropertySource("${signservice.integration.policy-configuration-resource}")
-@ConfigurationProperties
+@ConfigurationProperties("signservice")
 @Slf4j
 public class IntegrationServiceConfigurationProperties {
 
+  /** The configuration, where the map key is the policy name. */
   @Getter
   @Setter
   private Map<String, DefaultIntegrationServiceConfiguration> config;
-  
+    
+  /**
+   * Assigns default values.
+   */
   @PostConstruct
   public void assignDefaults() {
     if (this.config == null) {

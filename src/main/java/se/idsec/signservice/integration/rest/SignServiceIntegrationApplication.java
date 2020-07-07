@@ -21,10 +21,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import se.litsec.swedisheid.opensaml.xmlsec.config.SwedishEidSecurityConfiguration;
-import se.swedenconnect.opensaml.OpenSAMLInitializer;
-import se.swedenconnect.opensaml.OpenSAMLSecurityDefaultsConfig;
-import se.swedenconnect.opensaml.OpenSAMLSecurityExtensionConfig;
+import se.idsec.signservice.integration.SignServiceIntegrationServiceInitializer;
 
 /**
  * Application main.
@@ -44,18 +41,17 @@ public class SignServiceIntegrationApplication {
     SpringApplication.run(SignServiceIntegrationApplication.class, args);
   }
 
-  @Component
+  /**
+   * For initializing the underlying libraries (OpenSAML, xmlsec).
+   */
+  @Component("SignServiceInitializer")
   @Order(Ordered.HIGHEST_PRECEDENCE)
-  public static class OpenSAML {
-    
-    public OpenSAML() throws Exception {
-      OpenSAMLInitializer.getInstance()
-        .initialize(
-          // TODO: Make configurable ...
-          new OpenSAMLSecurityDefaultsConfig(new SwedishEidSecurityConfiguration()),
-          new OpenSAMLSecurityExtensionConfig());
+  public static class Initializer {
+
+    public Initializer() throws Exception {
+      SignServiceIntegrationServiceInitializer.initialize();
     }
-    
+
   }
 
 }
