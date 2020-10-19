@@ -30,9 +30,7 @@ public class SignServiceIntegrationHealthIndicator implements HealthIndicator {
   /** {@inheritDoc} */
   @Override
   public Health health() {
-    
     // TODO: Implement health check
-    
     return Health.up().build();
   }
 

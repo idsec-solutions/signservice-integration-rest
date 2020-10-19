@@ -21,7 +21,7 @@ import java.security.cert.X509Certificate;
 
 import org.opensaml.security.crypto.KeySupport;
 import org.opensaml.security.x509.BasicX509Credential;
-import org.springframework.beans.factory.config.AbstractFactoryBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
 import org.springframework.util.Assert;
 
@@ -32,16 +32,12 @@ import se.idsec.signservice.security.sign.impl.KeyStoreSigningCredential;
 import se.idsec.signservice.security.sign.impl.OpenSAMLSigningCredential;
 
 /**
- * Factory bean for creating {@link SigningCredential} instances.
- * 
- * <p>
- * TODO: Move this to a generic place.
- * </p>
+ * Properties for representing a signing credential.
  * 
  * @author Martin Lindström (martin@litsec.se)
  */
 @Slf4j
-public class SigningCredentialFactoryBean extends AbstractFactoryBean<SigningCredential> {
+public class SigningCredentialProperties implements InitializingBean {
 
   /**
    * Tells how the credential is represented.
@@ -88,36 +84,29 @@ public class SigningCredentialFactoryBean extends AbstractFactoryBean<SigningCre
   /** Holds the certificate of the credential (OPENSAML). */
   @Setter
   private X509Certificate certificate;
-
-  /** {@inheritDoc} */
-  @Override
-  public Class<?> getObjectType() {
-    return SigningCredential.class;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  protected SigningCredential createInstance() throws Exception {
+  
+  public SigningCredential getSigningCredential() throws Exception {
     if (CredentialFormat.KEYSTORE.equals(this.format)) {
       final KeyStoreSigningCredential cred =
           new KeyStoreSigningCredential(this.file, this.password, this.storeType, this.alias, this.keyPassword);
       cred.setName(this.name);
       return cred;
     }
-    else {
+    else if (CredentialFormat.OPENSAML.equals(this.format)) {
       final PrivateKey privateKey = KeySupport.decodePrivateKey(this.file.getInputStream(), this.keyPassword);
       final BasicX509Credential x509Credential = new BasicX509Credential(this.certificate, privateKey);
       final OpenSAMLSigningCredential cred = new OpenSAMLSigningCredential(x509Credential);
       cred.setName(this.name);
       return cred;
     }
+    else {
+      throw new IllegalArgumentException("Unsupported format - " + this.format);
+    }
   }
 
   /** {@inheritDoc} */
   @Override
   public void afterPropertiesSet() throws Exception {
-    super.afterPropertiesSet();
-
     if (this.format == null) {
       this.format = CredentialFormat.KEYSTORE;
       log.info("Credential format is not set, defaulting to {}", this.format);

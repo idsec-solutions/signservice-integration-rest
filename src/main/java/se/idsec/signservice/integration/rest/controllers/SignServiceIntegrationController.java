@@ -16,6 +16,7 @@
 package se.idsec.signservice.integration.rest.controllers;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -35,11 +36,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import se.idsec.signservice.integration.ExtendedSignServiceIntegrationService;
+import se.idsec.signservice.integration.ProcessSignResponseInput;
 import se.idsec.signservice.integration.SignRequestData;
 import se.idsec.signservice.integration.SignRequestInput;
 import se.idsec.signservice.integration.SignResponseCancelStatusException;
 import se.idsec.signservice.integration.SignResponseErrorStatusException;
-import se.idsec.signservice.integration.SignServiceIntegrationService;
 import se.idsec.signservice.integration.SignatureResult;
 import se.idsec.signservice.integration.config.IntegrationServiceDefaultConfiguration;
 import se.idsec.signservice.integration.config.PolicyNotFoundException;
@@ -47,6 +49,10 @@ import se.idsec.signservice.integration.core.error.BadRequestException;
 import se.idsec.signservice.integration.core.error.ErrorCode;
 import se.idsec.signservice.integration.core.error.InputValidationException;
 import se.idsec.signservice.integration.core.error.SignServiceIntegrationException;
+import se.idsec.signservice.integration.document.pdf.PdfSignaturePageFullException;
+import se.idsec.signservice.integration.document.pdf.PdfSignaturePagePreferences;
+import se.idsec.signservice.integration.document.pdf.PreparePdfSignaturePageInput;
+import se.idsec.signservice.integration.document.pdf.PreparedPdfDocument;
 
 /**
  * Main controller for the Sign Service Integration service.
@@ -61,7 +67,7 @@ class SignServiceIntegrationController {
   /** The service logic. */
   @Setter
   @Autowired
-  private SignServiceIntegrationService signServiceIntegrationService;
+  private ExtendedSignServiceIntegrationService signServiceIntegrationService;
 
   /**
    * Endpoint for creating the sign request data, i.e., called to obtain the data needed to initiate a signature
@@ -94,8 +100,6 @@ class SignServiceIntegrationController {
     log.debug("Processing POST request '{}' [user='{}', client-ip'{}']",
       request.getServletPath(), authentication.getName(), request.getRemoteAddr());
 
-    log.debug("Processing POST request '{}' from '{}'", request.getServletPath(), request.getRemoteAddr());
-
     // Check to ensure that the policy is correct ...
     //
     if (signRequestInput.getPolicy() == null) {
@@ -114,8 +118,8 @@ class SignServiceIntegrationController {
   }
 
   /**
-   * Endpoint that gets a {@link SignatureResult} based on the SignResponse data that was received from the sign
-   * service.
+   * Endpoint that processes a SignResponse data that was received from the sign service and returns a
+   * {@link SignatureResult}.
    * 
    * @param request
    *          the HTTP servlet request
@@ -134,27 +138,21 @@ class SignServiceIntegrationController {
    * @throws SignServiceIntegrationException
    *           for processing errors
    */
-  @GetMapping(value = "/result/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "/process", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   public SignatureResult processSignResponse(
       final HttpServletRequest request,
       final Authentication authentication,
-      @PathVariable("id") final String id,
       @RequestBody final ProcessSignResponseInput processSignResponseInput)
       throws SignResponseCancelStatusException, SignResponseErrorStatusException, SignServiceIntegrationException {
 
-    log.debug("Processing GET request '{}' [user='{}', client-ip'{}']",
+    log.debug("Processing POST request '{}' [user='{}', client-ip'{}']",
       request.getServletPath(), authentication.getName(), request.getRemoteAddr());
 
-    // Make sure the 'id' is correct ...
+    // Make sure we have the state ...
     //
     if (processSignResponseInput.getState() == null || processSignResponseInput.getState().getId() == null) {
-      final String msg = String.format("Can not process SignResponse with ID '%s' - No state is available", id);
-      log.info("{} [user='{}', client-ip'{}']", msg, authentication.getName(), request.getRemoteAddr());
-      throw new BadRequestException(new ErrorCode.Code("session"), msg);
-    }
-    if (!processSignResponseInput.getState().getId().equals(id)) {
-      final String msg = String.format("Bad state ('%s') passed in call to '%s'", id, request.getServletPath());
+      final String msg = String.format("Can not process SignResponse with ID '%s' - No state is available");
       log.info("{} [user='{}', client-ip'{}']", msg, authentication.getName(), request.getRemoteAddr());
       throw new BadRequestException(new ErrorCode.Code("session"), msg);
     }
@@ -164,9 +162,60 @@ class SignServiceIntegrationController {
     // Invoke the API implementation and create a SignResponse.
     //
     final SignatureResult signatureResult = this.signServiceIntegrationService.processSignResponse(
-      processSignResponseInput.getSignResponse(), id, processSignResponseInput.getState(), processSignResponseInput.getParameters());
+      processSignResponseInput.getSignResponse(), processSignResponseInput.getRelayState(), 
+      processSignResponseInput.getState(), processSignResponseInput.getParameters());
 
     return signatureResult;
+  }
+
+  /**
+   * Endpoint the gets a prepared PDF document possible containing a PDF signature image along with placement
+   * indications for a PDF signature image.
+   * 
+   * @param request
+   *          the HTTP request
+   * @param authentication
+   *          the user authentication object
+   * @param policy
+   *          the policy for the operation
+   * @param input
+   *          the PDF document to prepare along with preferences
+   * @return a PreparedPdfDocument object
+   * @throws InputValidationException
+   *           for input validation errors
+   * @throws SignServiceIntegrationException
+   *           for processing errors
+   * @throws PdfSignaturePageFullException
+   *           if the PDF document contains more signatures than there is room for in the PDF signature page (and
+   *           {@link PdfSignaturePagePreferences#isFailWhenSignPageFull()} evaluates to true)
+   */
+  @PreAuthorize("hasPermission(#policy, 'use')")
+  @PostMapping(value = "/prepare/{policy}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  public PreparedPdfDocument preparePdfSignaturePage(
+      final HttpServletRequest request,
+      final Authentication authentication,
+      @PathVariable("policy") final String policy,
+      @RequestBody final PreparePdfSignaturePageInput input)
+      throws InputValidationException, SignServiceIntegrationException, PdfSignaturePageFullException {
+
+    log.debug("Processing POST request '{}' [user='{}', client-ip'{}']",
+      request.getServletPath(), authentication.getName(), request.getRemoteAddr());
+
+    byte[] pdfBytes = null;
+    if (input.getPdfDocument() != null) {
+      try {
+        pdfBytes = Base64.getDecoder().decode(input.getPdfDocument());
+      }
+      catch (IllegalArgumentException e) {
+        throw new InputValidationException("pdfDocument", "Invalid Base64 encoding", e);
+      }
+    }
+
+    final PreparedPdfDocument preparedPdfDocument = this.signServiceIntegrationService.preparePdfSignaturePage(
+      policy, pdfBytes, input.getSignaturePagePreferences());
+
+    return preparedPdfDocument;
   }
 
   @PostFilter("hasPermission(filterObject, 'use')")

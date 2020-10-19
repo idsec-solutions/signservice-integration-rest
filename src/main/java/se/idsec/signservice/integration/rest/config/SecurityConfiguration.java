@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -48,7 +49,7 @@ import se.idsec.signservice.integration.rest.security.PolicyPermissionEvaluator;
  */
 @Configuration
 public class SecurityConfiguration {
-
+  
   /**
    * Gets the permission evaluator used to check if a user has permissions on a particular policy.
    * 
@@ -65,6 +66,10 @@ public class SecurityConfiguration {
   @Configuration
   @EnableWebSecurity
   public static class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
+    
+    @Value("${management.endpoints.web.base-path:/actuator}")
+    @Setter
+    private String actuatorBasePath;
 
     @Setter
     @Autowired
@@ -112,9 +117,12 @@ public class SecurityConfiguration {
         .and()
         .csrf().disable()
         .authorizeRequests()
+          .antMatchers(this.actuatorBasePath + "/**").permitAll()
+          .antMatchers("/actuator/**").permitAll()
           .antMatchers(HttpMethod.GET, "/v1/policy/list", "/v1/policy/get/**").hasAnyRole("USER", "ADMIN")
           .antMatchers(HttpMethod.POST, "/v1/create/**").hasAnyRole("USER", "ADMIN")
-          .antMatchers(HttpMethod.GET, "/v1/result/**").hasAnyRole("USER", "ADMIN")
+          .antMatchers(HttpMethod.POST, "/v1/process/**").hasAnyRole("USER", "ADMIN")
+          .antMatchers(HttpMethod.POST, "/v1/prepare/**").hasAnyRole("USER", "ADMIN")
           .antMatchers("/error").permitAll()
           .anyRequest().denyAll()
         .and()

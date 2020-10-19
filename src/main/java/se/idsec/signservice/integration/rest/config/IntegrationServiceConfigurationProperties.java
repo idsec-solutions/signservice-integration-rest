@@ -36,7 +36,7 @@ import se.idsec.signservice.integration.security.impl.OpenSAMLEncryptionParamete
  * @author Martin Lindström (martin@idsec.se)
  */
 @Component
-@DependsOn(value = {"DefaultSigningCredential", "nameToSigningCredentialConverter", "propertyToX509CertificateConverter"})
+@DependsOn(value = {"signingCredentials", "nameToSigningCredentialConverter", "propertyToX509CertificateConverter"})
 @PropertySource("${signservice.integration.policy-configuration-resource}")
 @ConfigurationProperties("signservice")
 @Slf4j

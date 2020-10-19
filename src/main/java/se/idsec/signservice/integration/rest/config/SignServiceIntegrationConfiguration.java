@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
-import se.idsec.signservice.integration.SignServiceIntegrationService;
+import se.idsec.signservice.integration.ExtendedSignServiceIntegrationService;
 import se.idsec.signservice.integration.config.ConfigurationManager;
 import se.idsec.signservice.integration.config.impl.DefaultConfigurationManager;
 import se.idsec.signservice.integration.config.spring.NameToSigningCredentialConverter;
@@ -40,6 +40,7 @@ import se.idsec.signservice.integration.document.SignedDocumentProcessor;
 import se.idsec.signservice.integration.document.TbsDocumentProcessor;
 import se.idsec.signservice.integration.document.pdf.PdfSignedDocumentProcessor;
 import se.idsec.signservice.integration.document.pdf.PdfTbsDocumentProcessor;
+import se.idsec.signservice.integration.document.pdf.signpage.DefaultPdfSignaturePagePreparator;
 import se.idsec.signservice.integration.document.xml.XmlSignedDocumentProcessor;
 import se.idsec.signservice.integration.document.xml.XmlTbsDocumentProcessor;
 import se.idsec.signservice.integration.impl.DefaultSignServiceIntegrationService;
@@ -48,7 +49,6 @@ import se.idsec.signservice.integration.process.SignResponseProcessingConfig;
 import se.idsec.signservice.integration.process.SignResponseProcessor;
 import se.idsec.signservice.integration.process.impl.DefaultSignRequestProcessor;
 import se.idsec.signservice.integration.process.impl.DefaultSignResponseProcessor;
-import se.idsec.signservice.integration.rest.config.support.SigningCredentialFactoryBean;
 import se.idsec.signservice.integration.security.impl.OpenSAMLIdpMetadataResolver;
 import se.idsec.signservice.integration.signmessage.SignMessageProcessor;
 import se.idsec.signservice.integration.signmessage.impl.DefaultSignMessageProcessor;
@@ -93,28 +93,19 @@ public class SignServiceIntegrationConfiguration {
   }
 
   /**
-   * Gets the default signing credential.
-   * 
-   * @return a SigningCredential
-   */
-  @ConfigurationProperties(prefix = "signservice.credential")
-  @Bean("DefaultSigningCredential")
-  public SigningCredentialFactoryBean defaultSigningCredential() {
-    return new SigningCredentialFactoryBean();
-  }
-
-  /**
    * Gets the bean for the SignService Integration Service.
    * 
    * @return SignServiceIntegrationService bean
    */
   @Bean
-  public SignServiceIntegrationService signServiceIntegrationService(
+  public ExtendedSignServiceIntegrationService signServiceIntegrationService(
       final ConfigurationManager configurationManager,
       final SignatureStateProcessor signatureStateProcessor,
       final SignRequestProcessor signRequestProcessor,
       final SignResponseProcessor signResponseProcessor) {
-    DefaultSignServiceIntegrationService service = new DefaultSignServiceIntegrationService();
+
+    final DefaultSignServiceIntegrationService service = new DefaultSignServiceIntegrationService();
+    service.setPdfSignaturePagePreparator(new DefaultPdfSignaturePagePreparator());
     service.setConfigurationManager(configurationManager);
     service.setSignatureStateProcessor(signatureStateProcessor);
     service.setSignRequestProcessor(signRequestProcessor);

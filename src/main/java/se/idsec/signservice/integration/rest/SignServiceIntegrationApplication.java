@@ -16,10 +16,14 @@
 package se.idsec.signservice.integration.rest;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.actuate.trace.http.HttpTraceRepository;
+import org.springframework.boot.actuate.trace.http.InMemoryHttpTraceRepository;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.web.filter.CommonsRequestLoggingFilter;
 
 import se.idsec.signservice.integration.SignServiceIntegrationServiceInitializer;
 
@@ -52,6 +56,31 @@ public class SignServiceIntegrationApplication {
       SignServiceIntegrationServiceInitializer.initialize();
     }
 
+  }
+
+  /**
+   * Provides logging of requests.
+   * 
+   * @return log filter bean
+   */
+  @Bean
+  public CommonsRequestLoggingFilter requestLoggingFilter() {
+    CommonsRequestLoggingFilter loggingFilter = new CommonsRequestLoggingFilter();
+    loggingFilter.setIncludeClientInfo(true);
+    loggingFilter.setIncludeQueryString(true);
+    loggingFilter.setIncludePayload(true);
+    loggingFilter.setMaxPayloadLength(64000);
+    return loggingFilter;
+  }
+
+  /**
+   * To allow Spring Boot actuator's httptrace.
+   * 
+   * @return a trace repository
+   */
+  @Bean
+  public HttpTraceRepository htttpTraceRepository() {
+    return new InMemoryHttpTraceRepository();
   }
 
 }

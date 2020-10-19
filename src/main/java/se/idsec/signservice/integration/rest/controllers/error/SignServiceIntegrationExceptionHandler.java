@@ -31,9 +31,10 @@ import se.idsec.signservice.integration.SignResponseErrorStatusException;
 import se.idsec.signservice.integration.core.error.BadRequestException;
 import se.idsec.signservice.integration.core.error.ErrorCode;
 import se.idsec.signservice.integration.core.error.InputValidationException;
+import se.idsec.signservice.integration.core.error.SignServiceIntegrationErrorBody;
+import se.idsec.signservice.integration.core.error.SignServiceIntegrationErrorBody.DssError;
+import se.idsec.signservice.integration.core.error.SignServiceIntegrationErrorBody.ValidationError;
 import se.idsec.signservice.integration.core.error.SignServiceIntegrationException;
-import se.idsec.signservice.integration.rest.controllers.error.SignServiceIntegrationApiError.DssError;
-import se.idsec.signservice.integration.rest.controllers.error.SignServiceIntegrationApiError.ValidationError;
 
 /**
  * Exception handler for the Sign Service Integration service.
@@ -62,12 +63,13 @@ public class SignServiceIntegrationExceptionHandler extends ResponseEntityExcept
       status = HttpStatus.INTERNAL_SERVER_ERROR;
     }
 
-    SignServiceIntegrationApiError body = SignServiceIntegrationApiError.builder()
+    final SignServiceIntegrationErrorBody body = SignServiceIntegrationErrorBody.builder()
       .status(status.value())
       .timestamp(System.currentTimeMillis())
       .errorCode(ex.getErrorCode().getErrorCode())
       .message(ex.getMessage())
       .path(this.getPath(request))
+      .exceptionClass(ex.getClass().getName())
       .build();
     if (InputValidationException.class.isInstance(ex)) {
       body.setValidationError(ValidationError.builder()
@@ -94,7 +96,7 @@ public class SignServiceIntegrationExceptionHandler extends ResponseEntityExcept
 
     final String errorCode = SignResponseCancelStatusException.class.isInstance(ex) ? "dss.cancel" : "dss.error";
 
-    SignServiceIntegrationApiError body = SignServiceIntegrationApiError.builder()
+    final SignServiceIntegrationErrorBody body = SignServiceIntegrationErrorBody.builder()
       .status(HttpStatus.BAD_REQUEST.value())
       .timestamp(System.currentTimeMillis())
       .errorCode(errorCode)
@@ -104,6 +106,7 @@ public class SignServiceIntegrationExceptionHandler extends ResponseEntityExcept
         .build())
       .message(ex.getMessage())
       .path(this.getPath(request))
+      .exceptionClass(ex.getClass().getName())
       .build();
 
     return this.handleExceptionInternal(ex, body, new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
@@ -123,12 +126,13 @@ public class SignServiceIntegrationExceptionHandler extends ResponseEntityExcept
         errorCode = new ErrorCode("internal", "invalid-call");
       }
 
-      body = SignServiceIntegrationApiError.builder()
+      body = SignServiceIntegrationErrorBody.builder()
         .status(status.value())
         .timestamp(System.currentTimeMillis())
         .errorCode(errorCode.getErrorCode())
         .message(ex.getMessage())
         .path(this.getPath(request))
+        .exceptionClass(ex.getClass().getName())
         .build();
     }
     return super.handleExceptionInternal(ex, body, headers, status, request);
