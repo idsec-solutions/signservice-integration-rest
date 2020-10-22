@@ -126,6 +126,7 @@ public class SignServiceIntegrationConfiguration {
     DefaultSignatureStateProcessor stateProcessor = new DefaultSignatureStateProcessor();
     // We should be running in stateless mode so there shouldn't be a need of a cache.
     stateProcessor.setStateCache(null);
+    stateProcessor.setBase64Encoded(true);
     stateProcessor.setConfigurationManager(configurationManager);
     return stateProcessor;
   }
