@@ -34,6 +34,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import se.idsec.signservice.integration.ExtendedSignServiceIntegrationService;
@@ -69,6 +73,16 @@ class SignServiceIntegrationController {
   @Autowired
   private ExtendedSignServiceIntegrationService signServiceIntegrationService;
 
+  // For JSON serialization into logs.
+  private ObjectMapper mapper = new ObjectMapper();
+  
+  /**
+   * Constructor.
+   */
+  public SignServiceIntegrationController() {
+    this.mapper.setSerializationInclusion(Include.NON_NULL);
+  }
+
   /**
    * Endpoint for creating the sign request data, i.e., called to obtain the data needed to initiate a signature
    * operation.
@@ -99,6 +113,8 @@ class SignServiceIntegrationController {
 
     log.debug("Processing POST request '{}' [user='{}', client-ip'{}']",
       request.getServletPath(), authentication.getName(), request.getRemoteAddr());
+    
+    log.trace("POST {}{}{}", request.getServletPath(), System.lineSeparator(), this.getJsonString(signRequestInput));
 
     // Check to ensure that the policy is correct ...
     //
@@ -113,6 +129,8 @@ class SignServiceIntegrationController {
     // Invoke the API implementation and create a SignRequestData ...
     //
     final SignRequestData signRequestData = this.signServiceIntegrationService.createSignRequest(signRequestInput);
+    
+    log.trace("Response to POST {}:{}{}", request.getServletPath(), System.lineSeparator(), this.getJsonString(signRequestData));
 
     return signRequestData;
   }
@@ -148,6 +166,8 @@ class SignServiceIntegrationController {
 
     log.debug("Processing POST request '{}' [user='{}', client-ip'{}']",
       request.getServletPath(), authentication.getName(), request.getRemoteAddr());
+    
+    log.trace("POST {}{}{}", request.getServletPath(), System.lineSeparator(), this.getJsonString(processSignResponseInput));
 
     // Make sure we have the state ...
     //
@@ -162,9 +182,11 @@ class SignServiceIntegrationController {
     // Invoke the API implementation and create a SignResponse.
     //
     final SignatureResult signatureResult = this.signServiceIntegrationService.processSignResponse(
-      processSignResponseInput.getSignResponse(), processSignResponseInput.getRelayState(), 
+      processSignResponseInput.getSignResponse(), processSignResponseInput.getRelayState(),
       processSignResponseInput.getState(), processSignResponseInput.getParameters());
 
+    log.trace("Response to POST {}:{}{}", request.getServletPath(), System.lineSeparator(), this.getJsonString(signatureResult));
+    
     return signatureResult;
   }
 
@@ -201,6 +223,8 @@ class SignServiceIntegrationController {
 
     log.debug("Processing POST request '{}' [user='{}', client-ip'{}']",
       request.getServletPath(), authentication.getName(), request.getRemoteAddr());
+    
+    log.trace("POST {}{}{}", request.getServletPath(), System.lineSeparator(), this.getJsonString(input));
 
     byte[] pdfBytes = null;
     if (input.getPdfDocument() != null) {
@@ -214,6 +238,8 @@ class SignServiceIntegrationController {
 
     final PreparedPdfDocument preparedPdfDocument = this.signServiceIntegrationService.preparePdfSignaturePage(
       policy, pdfBytes, input.getSignaturePagePreferences());
+    
+    log.trace("Response to POST {}:{}{}", request.getServletPath(), System.lineSeparator(), this.getJsonString(preparedPdfDocument));
 
     return preparedPdfDocument;
   }
@@ -243,6 +269,23 @@ class SignServiceIntegrationController {
     log.debug("Processing GET request '{}' from '{}'", request.getServletPath(), request.getRemoteAddr());
 
     return this.signServiceIntegrationService.getConfiguration(policy);
+  }
+
+  /**
+   * Serializes the supplied object into a JSON string. For logging purposes.
+   * 
+   * @param object
+   *          object to serialize
+   * @return the serialized string.
+   */
+  private String getJsonString(final Object object) {
+    try {
+      final ObjectWriter writer = mapper.writerWithDefaultPrettyPrinter();
+      return writer.writeValueAsString(object);
+    }
+    catch (Exception e) {
+      return "Failed to serialize JSON object - " + e.getMessage();
+    }
   }
 
 }
