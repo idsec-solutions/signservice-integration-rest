@@ -119,6 +119,7 @@ public class SecurityConfiguration {
         .authorizeRequests()
           .antMatchers(this.actuatorBasePath + "/**").permitAll()
           .antMatchers("/actuator/**").permitAll()
+          .antMatchers(HttpMethod.GET, "/v1/version").permitAll()
           .antMatchers(HttpMethod.GET, "/v1/policy/list", "/v1/policy/get/**").hasAnyRole("USER", "ADMIN")
           .antMatchers(HttpMethod.POST, "/v1/create/**").hasAnyRole("USER", "ADMIN")
           .antMatchers(HttpMethod.POST, "/v1/process/**").hasAnyRole("USER", "ADMIN")

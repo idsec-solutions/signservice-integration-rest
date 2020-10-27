@@ -15,6 +15,10 @@
  */
 package se.idsec.signservice.integration.rest;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.trace.http.HttpTraceRepository;
 import org.springframework.boot.actuate.trace.http.InMemoryHttpTraceRepository;
@@ -22,10 +26,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
 
 import se.idsec.signservice.integration.SignServiceIntegrationServiceInitializer;
+import se.idsec.signservice.integration.core.ContentLoader;
+import se.idsec.signservice.integration.core.ContentLoaderSingleton;
 
 /**
  * Application main.
@@ -53,9 +60,13 @@ public class SignServiceIntegrationApplication {
   public static class Initializer {
 
     public Initializer() throws Exception {
+      
+      // Workaround to avoid reflection on Java 11
+      //
+      ((ContentLoaderSingleton) ContentLoaderSingleton.getInstance()).setContentLoader(new SpringContentLoader());
+ 
       SignServiceIntegrationServiceInitializer.initialize();
     }
-
   }
 
   /**
@@ -81,6 +92,36 @@ public class SignServiceIntegrationApplication {
   @Bean
   public HttpTraceRepository htttpTraceRepository() {
     return new InMemoryHttpTraceRepository();
+  }
+  
+  /**
+   * Content loader using Spring.
+   */
+  private static class SpringContentLoader implements ContentLoader {
+    
+    /** Spring resource loader. */
+    private DefaultResourceLoader loader = new DefaultResourceLoader();
+
+    /** {@inheritDoc} */
+    @Override
+    public byte[] loadContent(final String resource) throws IOException {
+      if (resource == null) {
+        throw new IOException("resource is null");
+      }
+      final String _resource = resource.startsWith("/") ? "file://" + resource : resource;
+      
+      final InputStream is = this.loader.getResource(_resource).getInputStream();
+      
+      final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+      int nRead;
+      byte[] data = new byte[4096];
+      while ((nRead = is.read(data, 0, data.length)) != -1) {
+        buffer.write(data, 0, nRead);
+      }
+      buffer.flush();
+      return buffer.toByteArray();
+    }
+    
   }
 
 }

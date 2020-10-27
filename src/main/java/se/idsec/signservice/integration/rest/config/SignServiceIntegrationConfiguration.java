@@ -31,6 +31,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
+import lombok.Setter;
 import se.idsec.signservice.integration.ExtendedSignServiceIntegrationService;
 import se.idsec.signservice.integration.config.ConfigurationManager;
 import se.idsec.signservice.integration.config.impl.DefaultConfigurationManager;
@@ -66,7 +67,15 @@ import se.litsec.opensaml.saml2.metadata.provider.MetadataProvider;
 @Configuration
 @EnableConfigurationProperties
 public class SignServiceIntegrationConfiguration {
-
+  
+  @Setter
+  @Value("${application.version:1.0.0}")
+  private String version;
+  
+  @Setter
+  @Value("${signservice.default-policy-name:default}")
+  private String defaultPolicyName;
+  
   /** Temporary directory for caches. */
   private ApplicationTemp tempDir = new ApplicationTemp();
 
@@ -110,6 +119,7 @@ public class SignServiceIntegrationConfiguration {
     service.setSignatureStateProcessor(signatureStateProcessor);
     service.setSignRequestProcessor(signRequestProcessor);
     service.setSignResponseProcessor(signResponseProcessor);
+    service.setVersion(this.version);
     return service;
   }
 
@@ -284,7 +294,9 @@ public class SignServiceIntegrationConfiguration {
   @Bean
   public ConfigurationManager configurationManager(
       final IntegrationServiceConfigurationProperties properties) {
-    return new DefaultConfigurationManager(properties.getConfig());
+    final DefaultConfigurationManager mgr = new DefaultConfigurationManager(properties.getConfig());
+    mgr.setDefaultPolicyName(this.defaultPolicyName);
+    return mgr;
   }
 
 }

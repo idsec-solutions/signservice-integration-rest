@@ -42,10 +42,10 @@ public class CustomErrorAttributes extends DefaultErrorAttributes {
     
     final Date timestamp = (Date) errorAttributes.get("timestamp");
     if (timestamp != null) {
-      errorAttributes.put("timestamp", new Long(timestamp.getTime()));
+      errorAttributes.put("timestamp", Long.valueOf(timestamp.getTime()));
     }
     else {
-      errorAttributes.put("timestamp", new Long(System.currentTimeMillis()));
+      errorAttributes.put("timestamp", Long.valueOf(System.currentTimeMillis()));
     }
     
     Integer status = (Integer) errorAttributes.get("status");

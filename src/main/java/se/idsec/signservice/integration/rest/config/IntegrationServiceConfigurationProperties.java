@@ -36,7 +36,7 @@ import se.idsec.signservice.integration.security.impl.OpenSAMLEncryptionParamete
  * @author Martin Lindström (martin@idsec.se)
  */
 @Component
-@DependsOn(value = {"signingCredentials", "nameToSigningCredentialConverter", "propertyToX509CertificateConverter"})
+@DependsOn(value = { "SignServiceInitializer", "signingCredentials", "nameToSigningCredentialConverter", "propertyToX509CertificateConverter" })
 @PropertySource("${signservice.integration.policy-configuration-resource}")
 @ConfigurationProperties("signservice")
 @Slf4j
@@ -46,7 +46,7 @@ public class IntegrationServiceConfigurationProperties {
   @Getter
   @Setter
   private Map<String, DefaultIntegrationServiceConfiguration> config;
-    
+
   /**
    * Assigns default values.
    */
@@ -55,17 +55,21 @@ public class IntegrationServiceConfigurationProperties {
     if (this.config == null) {
       throw new IllegalArgumentException("Missing SignService Integration configuration");
     }
-    for (DefaultIntegrationServiceConfiguration c : this.config.values()) {
-      if (c.getParentPolicy() == null) {
-        if (c.getDefaultEncryptionParameters() == null) {
-          c.setDefaultEncryptionParameters(new OpenSAMLEncryptionParameters());
+
+    for (Map.Entry<String, DefaultIntegrationServiceConfiguration> e : this.config.entrySet()) {
+      if (e.getValue().getPolicy() == null) {
+        e.getValue().setPolicy(e.getKey());
+      }
+      if (e.getValue().getParentPolicy() == null) {
+        if (e.getValue().getDefaultEncryptionParameters() == null) {
+          e.getValue().setDefaultEncryptionParameters(new OpenSAMLEncryptionParameters());
         }
-        if (c.getDefaultSignatureAlgorithm() == null) {
-          c.setDefaultSignatureAlgorithm("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256");
+        if (e.getValue().getDefaultSignatureAlgorithm() == null) {
+          e.getValue().setDefaultSignatureAlgorithm("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256");
         }
       }
     }
     log.info("Integration Service Configuration: {}", this.config);
   }
-  
+
 }

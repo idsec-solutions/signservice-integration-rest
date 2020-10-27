@@ -16,18 +16,21 @@
 package se.idsec.signservice.integration.rest;
 
 import org.apache.catalina.connector.Connector;
+import org.apache.coyote.ajp.AbstractAjpProtocol;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 /**
  * Configuration settings for Tomcat.
  * 
  * @author Martin Lindström (martin@idsec.se)
  */
-@Configuration
-public class TomcatWebServerCustomizer implements WebServerFactoryCustomizer<TomcatServletWebServerFactory> {
+@Component
+@ConditionalOnProperty(name = "tomcat.ajp.enabled", havingValue = "true")
+public class TomcatWebServerConfiguration implements WebServerFactoryCustomizer<TomcatServletWebServerFactory> {
 
   /** The Tomcat AJP port. */
   @Value("${tomcat.ajp.port:8009}")
@@ -37,15 +40,37 @@ public class TomcatWebServerCustomizer implements WebServerFactoryCustomizer<Tom
   @Value("${tomcat.ajp.enabled:false}")
   private boolean tomcatAjpEnabled;
 
+  /** AJP secret */
+  @Value("${tomcat.ajp.secret:#{null}}")
+  private String ajpSecret;
+
+  /** Is AJP secret required? */
+  @Value("${tomcat.ajp.secretRequired:false}")
+  private boolean ajpSecretRequired;
+
   /** {@inheritDoc} */
   @Override
-  public void customize(TomcatServletWebServerFactory factory) {
+  public void customize(final TomcatServletWebServerFactory factory) {
+    
     if (this.tomcatAjpEnabled) {
       Connector ajpConnector = new Connector("AJP/1.3");
       ajpConnector.setPort(this.ajpPort);
-      ajpConnector.setSecure(false);
       ajpConnector.setAllowTrace(false);
       ajpConnector.setScheme("http");
+      ajpConnector.setProperty("address", "0.0.0.0");
+      ajpConnector.setProperty("allowedRequestAttributesPattern", ".*");
+
+      final AbstractAjpProtocol<?> protocol = (AbstractAjpProtocol<?>) ajpConnector.getProtocolHandler();
+      if (this.ajpSecretRequired) {
+        ajpConnector.setSecure(true);
+        protocol.setSecretRequired(true);
+        protocol.setSecret(this.ajpSecret);
+      }
+      else {
+        ajpConnector.setSecure(false);
+        protocol.setSecretRequired(false);
+      }
+
       factory.addAdditionalTomcatConnectors(ajpConnector);
     }
   }

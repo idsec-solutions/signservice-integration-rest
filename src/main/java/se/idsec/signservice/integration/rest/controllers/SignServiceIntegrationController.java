@@ -22,6 +22,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -38,6 +39,9 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import se.idsec.signservice.integration.ExtendedSignServiceIntegrationService;
@@ -76,13 +80,17 @@ class SignServiceIntegrationController {
   // For JSON serialization into logs.
   private ObjectMapper mapper = new ObjectMapper();
   
+  @Setter
+  @Value("${application.api-version:-}")
+  private String apiVersion;
+  
   /**
    * Constructor.
    */
   public SignServiceIntegrationController() {
     this.mapper.setSerializationInclusion(Include.NON_NULL);
   }
-
+    
   /**
    * Endpoint for creating the sign request data, i.e., called to obtain the data needed to initiate a signature
    * operation.
@@ -269,6 +277,20 @@ class SignServiceIntegrationController {
     log.debug("Processing GET request '{}' from '{}'", request.getServletPath(), request.getRemoteAddr());
 
     return this.signServiceIntegrationService.getConfiguration(policy);
+  }
+  
+  @GetMapping(value = "/version", produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  public VersionObject getVersion() {
+    return new VersionObject(this.signServiceIntegrationService.getVersion(), this.apiVersion);
+  }
+  
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  private static final class VersionObject {
+    private String version;
+    private String apiVersion;
   }
 
   /**
