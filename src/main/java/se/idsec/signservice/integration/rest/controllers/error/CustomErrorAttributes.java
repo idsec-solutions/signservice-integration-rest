@@ -25,6 +25,7 @@ import org.springframework.web.context.request.WebRequest;
 
 import se.idsec.signservice.integration.core.error.BadRequestException;
 import se.idsec.signservice.integration.core.error.ErrorCode;
+import se.idsec.signservice.integration.core.error.NoAccessException;
 
 /**
  * Handles errors that occur outside of the controllers.
@@ -53,11 +54,14 @@ public class CustomErrorAttributes extends DefaultErrorAttributes {
       errorAttributes.put("errorCode", 
         (new ErrorCode(BadRequestException.BAD_REQUEST_ERROR_CATEGORY.getCategory(), "invalid-call")).getErrorCode());
     }
+    else if (status != null && HttpStatus.FORBIDDEN.value() == status.intValue()) {
+      errorAttributes.put("errorCode", NoAccessException.ERROR_CODE.getErrorCode());
+    }
     else {
-      errorAttributes.put("errorCode", "internal.invalid-call");
+      errorAttributes.put("errorCode", ErrorCode.ERROR_CODE_PREFIX + "internal.invalid-call");
     }
     
-    errorAttributes.put("errorCode", "internal.invalid-call");
+    errorAttributes.put("errorCode", ErrorCode.ERROR_CODE_PREFIX + "internal.invalid-call");
     return errorAttributes;
   }
 

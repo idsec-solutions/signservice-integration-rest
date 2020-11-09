@@ -37,6 +37,7 @@ import se.idsec.signservice.integration.config.ConfigurationManager;
 import se.idsec.signservice.integration.config.impl.DefaultConfigurationManager;
 import se.idsec.signservice.integration.config.spring.NameToSigningCredentialConverter;
 import se.idsec.signservice.integration.config.spring.PropertyToX509CertificateConverter;
+import se.idsec.signservice.integration.core.DocumentCache;
 import se.idsec.signservice.integration.document.SignedDocumentProcessor;
 import se.idsec.signservice.integration.document.TbsDocumentProcessor;
 import se.idsec.signservice.integration.document.pdf.PdfSignedDocumentProcessor;
@@ -45,6 +46,7 @@ import se.idsec.signservice.integration.document.pdf.signpage.DefaultPdfSignatur
 import se.idsec.signservice.integration.document.xml.XmlSignedDocumentProcessor;
 import se.idsec.signservice.integration.document.xml.XmlTbsDocumentProcessor;
 import se.idsec.signservice.integration.impl.DefaultSignServiceIntegrationService;
+import se.idsec.signservice.integration.impl.PdfSignaturePagePreparator;
 import se.idsec.signservice.integration.process.SignRequestProcessor;
 import se.idsec.signservice.integration.process.SignResponseProcessingConfig;
 import se.idsec.signservice.integration.process.SignResponseProcessor;
@@ -53,6 +55,7 @@ import se.idsec.signservice.integration.process.impl.DefaultSignResponseProcesso
 import se.idsec.signservice.integration.security.impl.OpenSAMLIdpMetadataResolver;
 import se.idsec.signservice.integration.signmessage.SignMessageProcessor;
 import se.idsec.signservice.integration.signmessage.impl.DefaultSignMessageProcessor;
+import se.idsec.signservice.integration.state.IntegrationServiceStateCache;
 import se.idsec.signservice.integration.state.SignatureStateProcessor;
 import se.idsec.signservice.integration.state.impl.DefaultSignatureStateProcessor;
 import se.idsec.signservice.security.certificate.CertificateUtils;
@@ -67,15 +70,15 @@ import se.litsec.opensaml.saml2.metadata.provider.MetadataProvider;
 @Configuration
 @EnableConfigurationProperties
 public class SignServiceIntegrationConfiguration {
-  
+
   @Setter
   @Value("${application.version:1.0.0}")
   private String version;
-  
+
   @Setter
   @Value("${signservice.default-policy-name:default}")
   private String defaultPolicyName;
-  
+
   /** Temporary directory for caches. */
   private ApplicationTemp tempDir = new ApplicationTemp();
 
@@ -111,10 +114,11 @@ public class SignServiceIntegrationConfiguration {
       final ConfigurationManager configurationManager,
       final SignatureStateProcessor signatureStateProcessor,
       final SignRequestProcessor signRequestProcessor,
-      final SignResponseProcessor signResponseProcessor) {
+      final SignResponseProcessor signResponseProcessor,
+      final PdfSignaturePagePreparator pdfSignaturePagePreparator) {
 
     final DefaultSignServiceIntegrationService service = new DefaultSignServiceIntegrationService();
-    service.setPdfSignaturePagePreparator(new DefaultPdfSignaturePagePreparator());
+    service.setPdfSignaturePagePreparator(pdfSignaturePagePreparator);
     service.setConfigurationManager(configurationManager);
     service.setSignatureStateProcessor(signatureStateProcessor);
     service.setSignRequestProcessor(signRequestProcessor);
@@ -131,14 +135,28 @@ public class SignServiceIntegrationConfiguration {
    * @return a SignatureStateProcessor bean
    */
   @Bean
-  SignatureStateProcessor signatureStateProcessor(
-      final ConfigurationManager configurationManager) {
+  public SignatureStateProcessor signatureStateProcessor(
+      final ConfigurationManager configurationManager,
+      final IntegrationServiceStateCache integrationServiceStateCache) {
     DefaultSignatureStateProcessor stateProcessor = new DefaultSignatureStateProcessor();
-    // We should be running in stateless mode so there shouldn't be a need of a cache.
-    stateProcessor.setStateCache(null);
+    stateProcessor.setStateCache(integrationServiceStateCache);
     stateProcessor.setBase64Encoded(true);
     stateProcessor.setConfigurationManager(configurationManager);
     return stateProcessor;
+  }
+
+  /**
+   * Gets the {@link PdfSignaturePagePreparator} bean.
+   * 
+   * @param documentCache
+   *          the document cache
+   * @return a PdfSignaturePagePreparator bean
+   */
+  @Bean
+  public PdfSignaturePagePreparator pdfSignaturePagePreparator(final DocumentCache documentCache) {
+    DefaultPdfSignaturePagePreparator pdfPreparator = new DefaultPdfSignaturePagePreparator();
+    pdfPreparator.setDocumentCache(documentCache);
+    return pdfPreparator;
   }
 
   /**
@@ -153,10 +171,12 @@ public class SignServiceIntegrationConfiguration {
   @Bean
   public SignRequestProcessor signRequestProcessor(
       @Autowired final List<TbsDocumentProcessor<?>> tbsDocumentProcessors,
-      @Autowired(required = false) final SignMessageProcessor signMessageProcessor) {
+      @Autowired(required = false) final SignMessageProcessor signMessageProcessor,
+      final DocumentCache documentCache) {
     DefaultSignRequestProcessor processor = new DefaultSignRequestProcessor();
     processor.setTbsDocumentProcessors(tbsDocumentProcessors);
     processor.setSignMessageProcessor(signMessageProcessor);
+    processor.setDocumentCache(documentCache);
     return processor;
   }
 

@@ -50,6 +50,8 @@ import se.idsec.signservice.integration.SignRequestData;
 import se.idsec.signservice.integration.SignRequestInput;
 import se.idsec.signservice.integration.SignResponseCancelStatusException;
 import se.idsec.signservice.integration.SignResponseErrorStatusException;
+import se.idsec.signservice.integration.SignResponseProcessingParameters;
+import se.idsec.signservice.integration.SignServiceIntegrationService;
 import se.idsec.signservice.integration.SignatureResult;
 import se.idsec.signservice.integration.config.IntegrationServiceDefaultConfiguration;
 import se.idsec.signservice.integration.config.PolicyNotFoundException;
@@ -134,6 +136,11 @@ class SignServiceIntegrationController {
         policy, request.getServletPath(), authentication.getName(), request.getRemoteAddr());
       throw new InputValidationException("policy", "Supplied policy in input does not match URI");
     }
+    
+    // Set the caller (needed to supported cached documents) ...
+    //
+    signRequestInput.addExtensionValue(SignServiceIntegrationService.OWNER_ID_EXTENSION_KEY, authentication.getName());
+    
     // Invoke the API implementation and create a SignRequestData ...
     //
     final SignRequestData signRequestData = this.signServiceIntegrationService.createSignRequest(signRequestInput);
@@ -184,14 +191,20 @@ class SignServiceIntegrationController {
       log.info("{} [user='{}', client-ip'{}']", msg, authentication.getName(), request.getRemoteAddr());
       throw new BadRequestException(new ErrorCode.Code("session"), msg);
     }
-
-    // TODO: We need a way to ensure that the caller is the "owner" of the operation.
+    
+    // Set the caller (needed for access checking) ...
+    //
+    SignResponseProcessingParameters parameters = processSignResponseInput.getParameters();
+    if (parameters == null) {
+      parameters = new SignResponseProcessingParameters();
+    }
+    parameters.addExtensionValue(SignServiceIntegrationService.OWNER_ID_EXTENSION_KEY, authentication.getName());
 
     // Invoke the API implementation and create a SignResponse.
     //
     final SignatureResult signatureResult = this.signServiceIntegrationService.processSignResponse(
       processSignResponseInput.getSignResponse(), processSignResponseInput.getRelayState(),
-      processSignResponseInput.getState(), processSignResponseInput.getParameters());
+      processSignResponseInput.getState(), parameters);
 
     log.trace("Response to POST {}:{}{}", request.getServletPath(), System.lineSeparator(), this.getJsonString(signatureResult));
     
@@ -243,9 +256,15 @@ class SignServiceIntegrationController {
         throw new InputValidationException("pdfDocument", "Invalid Base64 encoding", e);
       }
     }
+    
+    PdfSignaturePagePreferences preferences = input.getSignaturePagePreferences();
+    if (preferences == null) {
+      preferences = new PdfSignaturePagePreferences();
+    }
+    preferences.addExtensionValue(SignServiceIntegrationService.OWNER_ID_EXTENSION_KEY, authentication.getName());
 
     final PreparedPdfDocument preparedPdfDocument = this.signServiceIntegrationService.preparePdfSignaturePage(
-      policy, pdfBytes, input.getSignaturePagePreferences());
+      policy, pdfBytes, preferences);
     
     log.trace("Response to POST {}:{}{}", request.getServletPath(), System.lineSeparator(), this.getJsonString(preparedPdfDocument));
 
