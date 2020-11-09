@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IDsec Solutions AB
+ * Copyright 2020 Litsec AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package se.idsec.signservice.integration.rest.redis;
+package se.idsec.signservice.integration.rest.config;
 
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
- * Repository for caching documents.
+ * Configuration for caches.
  * 
- * @author Martin Lindström (martin@idsec.se)
+ * @author Martin Lindström (martin@litsec.se)
  */
-@Repository
-public interface DocumentRepository extends CrudRepository<CachedDocument, String> {
-  // https://examples.javacodegeeks.com/spring-boot-with-redis-tutorial/
+@Configuration
+@EnableScheduling
+public class CacheConfiguration {
+
+  // https://www.baeldung.com/spring-scheduled-tasks
+
 }

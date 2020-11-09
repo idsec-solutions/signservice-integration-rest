@@ -18,6 +18,7 @@ package se.idsec.signservice.integration.rest.config;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -37,7 +38,9 @@ import se.idsec.signservice.integration.state.impl.InMemoryIntegrationServiceSta
  * 
  * @author Martin Lindström (martin@idsec.se)
  */
+
 @Configuration
+@ConditionalOnProperty(name = "signservice.cache.redis.enabled", havingValue = "false", matchIfMissing = true)
 @EnableScheduling
 public class InMemoryCacheConfiguration implements DisposableBean {
 
