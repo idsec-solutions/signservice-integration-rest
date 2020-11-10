@@ -57,9 +57,6 @@ public class IntegrationServiceConfigurationProperties {
     }
 
     for (Map.Entry<String, DefaultIntegrationServiceConfiguration> e : this.config.entrySet()) {
-      if (e.getValue().getPolicy() == null) {
-        e.getValue().setPolicy(e.getKey());
-      }
       if (e.getValue().getParentPolicy() == null) {
         if (e.getValue().getDefaultEncryptionParameters() == null) {
           e.getValue().setDefaultEncryptionParameters(new OpenSAMLEncryptionParameters());

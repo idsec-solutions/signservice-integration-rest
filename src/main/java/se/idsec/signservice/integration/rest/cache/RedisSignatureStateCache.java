@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package se.idsec.signservice.integration.rest.redis;
+package se.idsec.signservice.integration.rest.cache;
 
 import org.springframework.data.redis.core.RedisTemplate;
 
-import se.idsec.signservice.integration.rest.redis.AbstractRedisIntegrationServiceCache.AbstractRedisCachedObject;
-import se.idsec.signservice.integration.rest.redis.RedisSignatureStateCache.CachedSignatureState;
+import se.idsec.signservice.integration.rest.cache.AbstractRedisIntegrationServiceCache.AbstractRedisCachedObject;
+import se.idsec.signservice.integration.rest.cache.RedisSignatureStateCache.CachedSignatureState;
 import se.idsec.signservice.integration.state.CacheableSignatureState;
 import se.idsec.signservice.integration.state.IntegrationServiceStateCache;
 

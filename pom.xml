@@ -256,7 +256,6 @@
         <version>1.4.9</version>
         <configuration>
           <repository>${DOCKER_REPO}/${project.artifactId}</repository>
-          <repository>docker.eidastest.se:5000/${project.artifactId}</repository>
           <tag>latest</tag>
           <useMavenSettingsForAuth>true</useMavenSettingsForAuth>
         </configuration>

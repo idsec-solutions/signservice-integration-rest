@@ -32,7 +32,8 @@ may use the `prepare` method. This method accepts a PDF document that should be 
           }
         },
 4.      "failWhenSignPageFull" : true,
-5.      "insertPageAt" : 0
+5.      "insertPageAt" : 0,
+6.      "returnDocumentReference" : true
       }
   }
 ```
@@ -47,6 +48,8 @@ may use the `prepare` method. This method accepts a PDF document that should be 
 
 5. The `insertPageAt` gives the page number of the supplied document where the PDF signature page should be inserted. 0 means "as last page".
 
+6. The `returnDocumentReference` setting tells the server whether it should return a document reference instead of the entire document as the result. If the server is running in a stateful mode, this is the default.
+
 See [PreparePdfSignaturePageInput](https://github.com/idsec-solutions/signservice-integration-api/blob/master/src/main/java/se/idsec/signservice/integration/document/pdf/PreparePdfSignaturePageInput.java) for a complete definition of the input object.
 
 > \[1\]: To obtain the definition of a given profile policy, use `GET /v1/policy/get/{profile}`.
@@ -56,7 +59,7 @@ See [PreparePdfSignaturePageInput](https://github.com/idsec-solutions/signservic
 ```
   {
 1.  "policy" : "default",
-2.  "updatedPdfDocument" : "JVBERi0xLjMKJf...5ODE2CiUlRU9GCg==",
+2.  "updatedPdfDocumentReference" : "163ea75d-1b19-4570-a791-40b07da53bfb",
 3.  "visiblePdfSignatureRequirement" : {
       "signerName" : {
         "signerAttributes" : [ {
@@ -77,7 +80,7 @@ See [PreparePdfSignaturePageInput](https://github.com/idsec-solutions/signservic
 
 1. The `policy` property gives the profile policy that was used.
 
-2. The `updatedPdfDocument` contains the modified PDF document (included the inserted PDF signature page). If the `prepare` method processed a document that already contained signatures (and thus a PDF signature page), this property will be `null` meaning that the PDF document did not need to be modified.
+2. The `updatedPdfDocumentReference` contains a reference to the updated document. 
 
 3. The `visiblePdfSignatureRequirement` property contains the object that should be supplied in the `create` method. This gives information about where in the document the PDF signature image should be inserted.
 
@@ -113,7 +116,7 @@ The `create` method is used by the client in order to create the DSS `SignReques
     },
 6.  "tbsDocuments" : [ {
       "id" : "6bdf1a78-ffcc-475e-a795-f277bdd5f049",
-      "content" : "JVBERi0xLjMKJf...5ODE2CiUlRU9GCg==",
+      "contentReference" : "163ea75d-1b19-4570-a791-40b07da53bfb",
       "mimeType" : "application/pdf",
       "visiblePdfSignatureRequirement" : {
         "signerName" : {
@@ -155,7 +158,7 @@ The `create` method is used by the client in order to create the DSS `SignReques
   
   c. `requestedSignerAttributes` - A list of SAML attribute names and values. These are attributes that we require the Identity Provider to provide in the assertion following the "authentication for signature". Note that any attribute that is listed as `signedAttributes` under the `visiblePdfSignatureRequirement` (see below) must also be present in the `requestedSignerAttributes` listing.
   
-6. The `tbsDocuments` is a list of to-be-signed documents. In our example we sign the PDF document that was received in the `updatedPdfDocument` property in the `prepare` response. Also note that we add the `visiblePdfSignatureRequirement` property that was also received in the `prepare` response.
+6. The `tbsDocuments` is a list of to-be-signed documents. In our example we sign the PDF document that was received in the `updatedPdfDocumentReference` property in the `prepare` response. Also note that we add the `visiblePdfSignatureRequirement` property that was also received in the `prepare` response.
 
 7. The `signMessageParameters` property holds information about a text that should be displayed to the user during signing. It is the Identity Provider's responsibility to display this text. Only supported within the Sweden Connect federation.
 
@@ -166,10 +169,7 @@ See [SignRequestInput](https://github.com/idsec-solutions/signservice-integratio
 ```
   {
 1.  "state" : {
-      "id" : "2f725211-d572-4979-8fd4-678918136103",
-      "state" : {
-        "encodedState" : "eyJjb3Jy...MzUSsifQ=="
-      }
+      "id" : "2f725211-d572-4979-8fd4-678918136103"
     },
 2.  "signRequest" : "PD94bWwg...xdWVzdD4=",
 3.  "relayState" : "2f725211-d572-4979-8fd4-678918136103",
@@ -178,7 +178,7 @@ See [SignRequestInput](https://github.com/idsec-solutions/signservice-integratio
   }
 ```
 
-1. When the client is using the Signature Service Integration Service it is responsible of keeping the state of the current operation, since the service itself is completely stateless. The `state` property should not be analalyzed or processed. It should only be saved in the client state so that it can be supplied in the `process` call.
+1. When the client is using the Signature Service Integration Service it is responsible of keeping a handle to the state of the current operation. The `state` property should be saved in the client state so that it can be supplied in the `process` call.
 
 2. The `signRequest` holds the Base64-encoded `SignRequest` that is to be posted to the signature service in the `EidSignRequest` form parameter.
 
@@ -258,10 +258,7 @@ POST /v1/process
   "signResponse" : "PD94bWwgdmV...c3BvbnNlPg==",
   "relayState" : "2f725211-d572-4979-8fd4-678918136103",
   "state" : {
-    "id" : "2f725211-d572-4979-8fd4-678918136103",
-    "state" : {
-      "encodedState" : "eyJjb3Jy...MzUSsifQ=="
-    }
+    "id" : "2f725211-d572-4979-8fd4-678918136103"
   }
 }
 ```

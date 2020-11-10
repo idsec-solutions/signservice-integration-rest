@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package se.idsec.signservice.integration.rest.redis;
+package se.idsec.signservice.integration.rest.cache;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.PostConstruct;
 
@@ -23,13 +26,14 @@ import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import se.idsec.signservice.integration.core.IntegrationServiceCache;
 import se.idsec.signservice.integration.core.impl.AbstractIntegrationServiceCache;
-import se.idsec.signservice.integration.rest.redis.AbstractRedisIntegrationServiceCache.AbstractRedisCachedObject;
+import se.idsec.signservice.integration.rest.cache.AbstractRedisIntegrationServiceCache.AbstractRedisCachedObject;
 
 /**
  * Abstract base class for implemeting the {@link IntegrationServiceCache} using Redis.
@@ -49,7 +53,10 @@ public abstract class AbstractRedisIntegrationServiceCache<T extends Serializabl
   private final RedisTemplate<String, Object> redisTemplate;
 
   /** The Redis hash operations object. */
-  private HashOperations<String, String, R> hashOperations;
+  private HashOperations<String, String, R> operations;
+  
+  /** For keeping a small cache so that we can check expired entries (Redis doesn't support TTL on each entry). */
+  private HashOperations<String, String, ExpirationHelperObject> expOps;
 
   /**
    * Constructor.
@@ -59,7 +66,8 @@ public abstract class AbstractRedisIntegrationServiceCache<T extends Serializabl
    */
   public AbstractRedisIntegrationServiceCache(final RedisTemplate<String, Object> redisTemplate) {
     this.redisTemplate = redisTemplate;
-    this.hashOperations = this.redisTemplate.opsForHash();
+    this.operations = this.redisTemplate.opsForHash();
+    this.expOps = this.redisTemplate.opsForHash();
   }
 
   /**
@@ -87,26 +95,44 @@ public abstract class AbstractRedisIntegrationServiceCache<T extends Serializabl
   /** {@inheritDoc} */
   @Override
   protected CacheEntry<T> getCacheEntry(final String id) {
-    return this.hashOperations.get(this.getRedisHashName(), id);
+    return this.operations.get(this.getRedisHashName(), id);
   }
 
   /** {@inheritDoc} */
   @Override
   protected void putCacheObject(final String id, final T object, final String ownerId, final long expirationTime) {
-    this.hashOperations.put(this.getRedisHashName(), id, this.createCacheObject(id, object, ownerId, expirationTime));    
+    this.operations.put(this.getRedisHashName(), id, this.createCacheObject(id, object, ownerId, expirationTime));
+    this.expOps.put(this.getRedisHashName() + "_exp", id, new ExpirationHelperObject(id, expirationTime));
   }
 
   /** {@inheritDoc} */
   @Override
   protected void removeCacheObject(final String id) {
-    this.hashOperations.delete(this.getRedisHashName(), id);
+    this.operations.delete(this.getRedisHashName(), id);
+    this.expOps.delete(this.getRedisHashName() + "_exp", id);
   }
 
-  /**
-   * A No-op for a redis cache. We configure the cache with TTL settings instead.
-   */
+  /** {@inheritDoc} */
   @Override
   public void clearExpired() {
+    log.trace("clearExpired called ...");
+    
+    final List<ExpirationHelperObject> values = 
+        Optional.ofNullable(this.expOps.values(this.getRedisHashName() + "_exp")).orElse(Collections.emptyList());
+    
+    final long now = System.currentTimeMillis();
+    final Object[] forRemoval = values.stream()
+        .filter(v -> now > Optional.ofNullable(v.getExpirationTime()).orElse(Long.MAX_VALUE))
+        .map(ExpirationHelperObject::getId)
+        .toArray(String[]::new);
+    
+    if (forRemoval.length == 0) {
+      log.trace("No expired entries to purge ...");
+      return;
+    }
+    log.debug("Purging expired cached entries from {}/{}: {}", this.getClass().getSimpleName(), this.getRedisHashName(), forRemoval);
+    this.operations.delete(this.getRedisHashName(), forRemoval);
+    this.expOps.delete(this.getRedisHashName() + "_exp", forRemoval);
   }
   
   /**
@@ -117,7 +143,7 @@ public abstract class AbstractRedisIntegrationServiceCache<T extends Serializabl
   @PostConstruct
   public void testConnection() throws Exception {
     log.debug("Checking connection for Redis hash '{}' ...", this.getRedisHashName());
-    Long size = this.hashOperations.size(this.getRedisHashName());
+    Long size = this.operations.size(this.getRedisHashName());
     log.debug("Size for Redis hash '{}' is '{}'", this.getRedisHashName(), size);
   }
 
@@ -167,5 +193,16 @@ public abstract class AbstractRedisIntegrationServiceCache<T extends Serializabl
     }
 
   }
+  
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  private static class ExpirationHelperObject implements Serializable {
+    /** For serializing. */
+    private static final long serialVersionUID = -3004136054046290749L;
+    private String id;
+    private Long expirationTime;
+  }
+
 
 }

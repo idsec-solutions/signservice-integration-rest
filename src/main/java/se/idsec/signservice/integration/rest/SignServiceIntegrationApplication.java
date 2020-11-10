@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
 
@@ -40,6 +41,7 @@ import se.idsec.signservice.integration.core.ContentLoaderSingleton;
  * @author Martin Lindström (martin@idsec.se)
  */
 @SpringBootApplication
+@EnableScheduling
 public class SignServiceIntegrationApplication {
 
   /**
