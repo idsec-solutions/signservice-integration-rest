@@ -6,7 +6,7 @@
   <artifactId>signservice-integration-rest</artifactId>
   <groupId>se.idsec.signservice.integration</groupId>
   <packaging>jar</packaging>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
 
   <parent>
     <groupId>org.springframework.boot</groupId>
@@ -56,7 +56,7 @@
 
   <properties>
     <java.version>11</java.version>
-    <sign.api.version>1.2.0-SNAPSHOT</sign.api.version>
+    <sign.api.version>1.2.0</sign.api.version>
   </properties>
 
   <distributionManagement>
@@ -93,7 +93,7 @@
       <dependency>
         <groupId>se.idsec.signservice.integration</groupId>
         <artifactId>signservice-integration-impl</artifactId>
-        <version>1.2.0-SNAPSHOT</version>
+        <version>1.2.0</version>
         <type>jar</type>
         <scope>compile</scope>
       </dependency>
@@ -101,7 +101,7 @@
       <dependency>
         <groupId>se.idsec.signservice.integration</groupId>
         <artifactId>signservice-integration-xml</artifactId>
-        <version>1.2.0-SNAPSHOT</version>
+        <version>1.2.0</version>
         <type>jar</type>
         <scope>compile</scope>
         <exclusions>
@@ -115,7 +115,7 @@
       <dependency>
         <groupId>se.idsec.signservice.integration</groupId>
         <artifactId>signservice-integration-pdf</artifactId>
-        <version>1.2.0-SNAPSHOT</version>
+        <version>1.2.0</version>
         <type>jar</type>
         <scope>compile</scope>
         <exclusions>
