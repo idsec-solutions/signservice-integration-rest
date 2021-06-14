@@ -146,6 +146,7 @@ Each entry is prefixed with `signservice.config.<p>` where `<p>` is the policy n
 | `default-authn-context-ref` | The default Authentication Context Class Ref to use if not supplied by the client. |
 | `sign-service-id` | The entityID for the sign service that we are communicating with. |
 | `default-destination-url` | Default URL where to send SignRequest messages. |
+| `default-return-url` | The default URL to which the user agent along with the sign response message should be directed after a signature operation. |
 | `sign-service-certificates[index]` | The sign service certificate(s). The reason that a list is specified is to enable a smooth transition if the sign service changes key/certificate. The parameter is given as a resource (prefixed with `classpath:` or `file://`).|
 | `trust-anchors[index]` | The trust anchor(s). for the sign service CA. The parameter is given as a resource (prefixed with `classpath:` or `file://`). |
 | `signing-credential` | The sign service integration signing credential. The value MUST be the `name` of one of the credentials (see section [3.2](#credentials-configuration) above. |
