@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IDsec Solutions AB
+ * Copyright 2020-2022 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import java.io.File;
 import java.security.cert.X509Certificate;
 import java.util.List;
 
-import org.opensaml.security.httpclient.HttpClientSecurityParameters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -59,12 +58,12 @@ import se.idsec.signservice.integration.state.IntegrationServiceStateCache;
 import se.idsec.signservice.integration.state.SignatureStateProcessor;
 import se.idsec.signservice.integration.state.impl.DefaultSignatureStateProcessor;
 import se.idsec.signservice.security.certificate.CertificateUtils;
-import se.litsec.opensaml.saml2.metadata.provider.HTTPMetadataProvider;
-import se.litsec.opensaml.saml2.metadata.provider.MetadataProvider;
+import se.swedenconnect.opensaml.saml2.metadata.provider.HTTPMetadataProvider;
+import se.swedenconnect.opensaml.saml2.metadata.provider.MetadataProvider;
 
 /**
  * Application main configuration.
- * 
+ *
  * @author Martin Lindström (martin@idsec.se)
  */
 @Configuration
@@ -72,7 +71,7 @@ import se.litsec.opensaml.saml2.metadata.provider.MetadataProvider;
 public class SignServiceIntegrationConfiguration {
 
   @Setter
-  @Value("${application.version:1.0.0}")
+  @Value("${application.version:1.1.0}")
   private String version;
 
   @Setter
@@ -84,7 +83,7 @@ public class SignServiceIntegrationConfiguration {
 
   /**
    * Creates (and registers) the {@link NameToSigningCredentialConverter} converter.
-   * 
+   *
    * @return a NameToSigningCredentialConverter
    */
   @Bean("nameToSigningCredentialConverter")
@@ -95,7 +94,7 @@ public class SignServiceIntegrationConfiguration {
 
   /**
    * Creates (and registers) the {@link PropertyToX509CertificateConverter} converter.
-   * 
+   *
    * @return a PropertyToX509CertificateConverter
    */
   @Bean("propertyToX509CertificateConverter")
@@ -106,7 +105,7 @@ public class SignServiceIntegrationConfiguration {
 
   /**
    * Gets the bean for the SignService Integration Service.
-   * 
+   *
    * @return SignServiceIntegrationService bean
    */
   @Bean
@@ -129,7 +128,7 @@ public class SignServiceIntegrationConfiguration {
 
   /**
    * Gets the {@link SignatureStateProcessor} bean.
-   * 
+   *
    * @param configurationManager
    *          the configuration manager
    * @return a SignatureStateProcessor bean
@@ -147,7 +146,7 @@ public class SignServiceIntegrationConfiguration {
 
   /**
    * Gets the {@link PdfSignaturePagePreparator} bean.
-   * 
+   *
    * @param documentCache
    *          the document cache
    * @return a PdfSignaturePagePreparator bean
@@ -161,7 +160,7 @@ public class SignServiceIntegrationConfiguration {
 
   /**
    * Creates a sign request processor.
-   * 
+   *
    * @param tbsDocumentProcessors
    *          the document processors
    * @param signMessageProcessor
@@ -173,7 +172,8 @@ public class SignServiceIntegrationConfiguration {
       @Autowired final List<TbsDocumentProcessor<?>> tbsDocumentProcessors,
       @Autowired(required = false) final SignMessageProcessor signMessageProcessor,
       final DocumentCache documentCache) {
-    DefaultSignRequestProcessor processor = new DefaultSignRequestProcessor();
+    final DefaultSignRequestProcessor processor = new DefaultSignRequestProcessor();
+    processor.setDefaultVersion("1.4");
     processor.setTbsDocumentProcessors(tbsDocumentProcessors);
     processor.setSignMessageProcessor(signMessageProcessor);
     processor.setDocumentCache(documentCache);
@@ -182,7 +182,7 @@ public class SignServiceIntegrationConfiguration {
 
   /**
    * Gets the {@code XmlTbsDocumentProcessor} bean.
-   * 
+   *
    * @return the XmlTbsDocumentProcessor bean
    */
   @Bean
@@ -192,7 +192,7 @@ public class SignServiceIntegrationConfiguration {
 
   /**
    * Gets the {@code PdfTbsDocumentProcessor} bean.
-   * 
+   *
    * @return the PdfTbsDocumentProcessor bean
    */
   @Bean
@@ -202,7 +202,7 @@ public class SignServiceIntegrationConfiguration {
 
   /**
    * Creates the {@code SignMessageProcessor} bean if SignMessage support is enabled.
-   * 
+   *
    * @param metadataProvider
    *          the metadata provider
    * @return a SignMessageProcessor bean
@@ -217,7 +217,7 @@ public class SignServiceIntegrationConfiguration {
 
   /**
    * If SignMessage support is enabled the method returns the {@code MetadataProvider} bean.
-   * 
+   *
    * @param federationMetadataUrl
    *          URL from where to download metadata
    * @param validationCertificate
@@ -234,11 +234,8 @@ public class SignServiceIntegrationConfiguration {
 
     final X509Certificate cert = CertificateUtils.decodeCertificate(validationCertificate.getInputStream());
 
-    final HttpClientSecurityParameters tlsPars = new HttpClientSecurityParameters();
-    tlsPars.setTLSTrustEngine((token, trustBasisCriteria) -> true);
-
     final File backupFile = new File(this.tempDir.getDir(), "metadata-cache.xml");
-    final HTTPMetadataProvider provider = new HTTPMetadataProvider(federationMetadataUrl, backupFile.getAbsolutePath(), tlsPars);
+    final HTTPMetadataProvider provider = new HTTPMetadataProvider(federationMetadataUrl, backupFile.getAbsolutePath());
     provider.setPerformSchemaValidation(false);
     provider.setSignatureVerificationCertificate(cert);
     return provider;
@@ -246,7 +243,7 @@ public class SignServiceIntegrationConfiguration {
 
   /**
    * Gets the {@code SignResponseProcessor} processor.
-   * 
+   *
    * @param signResponseProcessingConfig
    *          the SignResponseProcessingConfig bean
    * @param signedDocumentProcessors
@@ -265,7 +262,7 @@ public class SignServiceIntegrationConfiguration {
 
   /**
    * Gets the {@code XmlSignedDocumentProcessor} bean
-   * 
+   *
    * @param signResponseProcessingConfig
    *          the SignResponseProcessingConfig bean
    * @return the XmlSignedDocumentProcessor bean
@@ -280,7 +277,7 @@ public class SignServiceIntegrationConfiguration {
 
   /**
    * Gets the {@code PdfSignedDocumentProcessor} bean
-   * 
+   *
    * @param signResponseProcessingConfig
    *          the SignResponseProcessingConfig bean
    * @return the PdfSignedDocumentProcessor bean
@@ -295,7 +292,7 @@ public class SignServiceIntegrationConfiguration {
 
   /**
    * Gets the {@code SignResponseProcessingConfig} bean.
-   * 
+   *
    * @return the SignResponseProcessingConfig bean
    */
   @Bean
@@ -306,7 +303,7 @@ public class SignServiceIntegrationConfiguration {
 
   /**
    * Gets the SignService {@link ConfigurationManager} bean.
-   * 
+   *
    * @param the
    *          properties for the configuration
    * @return the ConfigurationManager bean
