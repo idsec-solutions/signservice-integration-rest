@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Litsec AB
+ * Copyright 2020-2022 Litsec AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,11 +29,11 @@ import org.springframework.context.support.GenericApplicationContext;
 import lombok.Getter;
 import lombok.Setter;
 import se.idsec.signservice.integration.rest.config.support.SigningCredentialProperties;
-import se.idsec.signservice.security.sign.SigningCredential;
+import se.swedenconnect.security.credential.PkiCredential;
 
 /**
  * Configuration for setting up signature credentials.
- * 
+ *
  * @author Martin Lindström (martin@litsec.se)
  */
 @Configuration
@@ -51,15 +51,15 @@ public class SignatureCredentialsConfiguration implements InitializingBean {
   private List<SigningCredentialProperties> credentials;
 
   /** The actual signing credentials. */
-  private List<SigningCredential> signingCredentials;
+  private List<PkiCredential> signingCredentials;
 
   /**
    * Gets the {@code signingCredentials} bean.
-   * 
+   *
    * @return a list of signing credentials defined
    */
   @Bean("signingCredentials")
-  public List<SigningCredential> signingCredentials() {
+  public List<PkiCredential> signingCredentials() {
     return this.signingCredentials;
   }
 
@@ -68,13 +68,13 @@ public class SignatureCredentialsConfiguration implements InitializingBean {
   public void afterPropertiesSet() throws Exception {
     if (this.credentials != null && !this.credentials.isEmpty()) {
       this.signingCredentials = new ArrayList<>();
-      for (SigningCredentialProperties c : this.credentials) {
-        final SigningCredential credential = c.getSigningCredential();
+      for (final SigningCredentialProperties c : this.credentials) {
+        final PkiCredential credential = c.getSigningCredential();
         String name = credential.getName();
         if (name == null) {
           name = UUID.randomUUID().toString();
         }
-        context.registerBean("SigningCredential." + name, SigningCredential.class, () -> credential);
+        context.registerBean("SigningCredential." + name, PkiCredential.class, () -> credential);
         this.signingCredentials.add(credential);
       }
     }

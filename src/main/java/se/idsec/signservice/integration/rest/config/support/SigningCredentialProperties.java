@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Litsec AB
+ * Copyright 2020-2022 Litsec AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,20 +20,19 @@ import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
 import org.opensaml.security.crypto.KeySupport;
-import org.opensaml.security.x509.BasicX509Credential;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
 import org.springframework.util.Assert;
 
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import se.idsec.signservice.security.sign.SigningCredential;
-import se.idsec.signservice.security.sign.impl.KeyStoreSigningCredential;
-import se.idsec.signservice.security.sign.impl.OpenSAMLSigningCredential;
+import se.swedenconnect.security.credential.BasicCredential;
+import se.swedenconnect.security.credential.KeyStoreCredential;
+import se.swedenconnect.security.credential.PkiCredential;
 
 /**
  * Properties for representing a signing credential.
- * 
+ *
  * @author Martin Lindström (martin@litsec.se)
  */
 @Slf4j
@@ -84,19 +83,20 @@ public class SigningCredentialProperties implements InitializingBean {
   /** Holds the certificate of the credential (OPENSAML). */
   @Setter
   private X509Certificate certificate;
-  
-  public SigningCredential getSigningCredential() throws Exception {
+
+  public PkiCredential getSigningCredential() throws Exception {
     if (CredentialFormat.KEYSTORE.equals(this.format)) {
-      final KeyStoreSigningCredential cred =
-          new KeyStoreSigningCredential(this.file, this.password, this.storeType, this.alias, this.keyPassword);
+      final KeyStoreCredential cred =
+          new KeyStoreCredential(this.file, this.storeType, this.password, this.alias, this.keyPassword);
       cred.setName(this.name);
+      cred.init();
       return cred;
     }
     else if (CredentialFormat.OPENSAML.equals(this.format)) {
       final PrivateKey privateKey = KeySupport.decodePrivateKey(this.file.getInputStream(), this.keyPassword);
-      final BasicX509Credential x509Credential = new BasicX509Credential(this.certificate, privateKey);
-      final OpenSAMLSigningCredential cred = new OpenSAMLSigningCredential(x509Credential);
+      final BasicCredential cred = new BasicCredential(this.certificate, privateKey);
       cred.setName(this.name);
+      cred.init();
       return cred;
     }
     else {
