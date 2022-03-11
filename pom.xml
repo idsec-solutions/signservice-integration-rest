@@ -92,7 +92,7 @@
       <dependency>
         <groupId>se.idsec.signservice.commons</groupId>
         <artifactId>signservice-bom</artifactId>
-        <version>1.2.0</version>
+        <version>1.2.1</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -108,7 +108,7 @@
       <dependency>
         <groupId>se.idsec.signservice.integration</groupId>
         <artifactId>signservice-integration-impl</artifactId>
-        <version>1.3.0</version>
+        <version>1.3.1</version>
         <type>jar</type>
         <scope>compile</scope>
       </dependency>
@@ -116,7 +116,7 @@
       <dependency>
         <groupId>se.idsec.signservice.integration</groupId>
         <artifactId>signservice-integration-xml</artifactId>
-        <version>1.3.0</version>
+        <version>1.3.1</version>
         <type>jar</type>
         <scope>compile</scope>
         <exclusions>
@@ -130,7 +130,7 @@
       <dependency>
         <groupId>se.idsec.signservice.integration</groupId>
         <artifactId>signservice-integration-pdf</artifactId>
-        <version>1.3.0</version>
+        <version>1.3.1</version>
         <type>jar</type>
         <scope>compile</scope>
         <exclusions>
