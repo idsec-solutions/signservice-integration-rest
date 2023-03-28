@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Litsec AB
+ * Copyright 2020-2023 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,23 +33,23 @@ import lombok.ToString;
 /**
  * Configuration properties for the users that should have access to the service.
  * 
- * @author Martin Lindström (martin@litsec.se)
+ * @author Martin Lindström
  */
 @Component
 @PropertySource("${signservice.security.user-configuration}")
 @ConfigurationProperties("signservice")
 public class UsersConfigurationProperties {
-    
+
   @Setter
   private Map<String, UserEntry> user;
-  
+
   public Collection<UserEntry> getUsers() {
     return this.user != null ? this.user.values() : Collections.emptyList();
   }
-  
+
   @PostConstruct
   public void setup() {
-    
+
     if (this.user != null) {
       this.user.entrySet().stream().forEach(e -> e.getValue().setUserId(e.getKey()));
     }
@@ -60,7 +60,7 @@ public class UsersConfigurationProperties {
    */
   @ToString
   public static class UserEntry {
-    
+
     @Setter
     @Getter
     private String userId;
@@ -72,19 +72,19 @@ public class UsersConfigurationProperties {
     /** The policies that a user has access to. */
     @Setter
     private List<String> policies;
-    
+
     @Setter
     @Getter
     private String password;
-    
+
     public List<String> getRoles() {
-      return this.roles != null ? this.roles : Collections.emptyList(); 
+      return this.roles != null ? this.roles : Collections.emptyList();
     }
 
     public List<String> getPolicies() {
       return this.policies != null ? this.policies : Collections.emptyList();
     }
-    
+
   }
 
 }

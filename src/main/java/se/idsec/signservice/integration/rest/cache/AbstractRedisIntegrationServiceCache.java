@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Litsec AB
+ * Copyright 2020-2023 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,12 +38,10 @@ import se.idsec.signservice.integration.rest.cache.AbstractRedisIntegrationServi
 /**
  * Abstract base class for implemeting the {@link IntegrationServiceCache} using Redis.
  * 
- * @param <T>
- *          the actual type that is cached
- * @param <R>
- *          the type encapsulating the objects that are cached
+ * @param <T> the actual type that is cached
+ * @param <R> the type encapsulating the objects that are cached
  * 
- * @author Martin Lindström (martin@litsec.se)
+ * @author Martin Lindström
  */
 @Slf4j
 public abstract class AbstractRedisIntegrationServiceCache<T extends Serializable, R extends AbstractRedisCachedObject<T>>
@@ -54,15 +52,14 @@ public abstract class AbstractRedisIntegrationServiceCache<T extends Serializabl
 
   /** The Redis hash operations object. */
   private HashOperations<String, String, R> operations;
-  
+
   /** For keeping a small cache so that we can check expired entries (Redis doesn't support TTL on each entry). */
   private HashOperations<String, String, ExpirationHelperObject> expOps;
 
   /**
    * Constructor.
    * 
-   * @param redisTemplate
-   *          the Redis template
+   * @param redisTemplate the Redis template
    */
   public AbstractRedisIntegrationServiceCache(final RedisTemplate<String, Object> redisTemplate) {
     this.redisTemplate = redisTemplate;
@@ -80,17 +77,14 @@ public abstract class AbstractRedisIntegrationServiceCache<T extends Serializabl
   /**
    * Creates a cacheable object.
    * 
-   * @param id
-   *          the ID
-   * @param object
-   *          the actual object to cache
-   * @param ownerId
-   *          the owner id
-   * @param expirationTime
-   *          the expiration time
+   * @param id the ID
+   * @param object the actual object to cache
+   * @param ownerId the owner id
+   * @param expirationTime the expiration time
    * @return a cacheable object
    */
-  protected abstract R createCacheObject(final String id, final T object, final String ownerId, final long expirationTime);
+  protected abstract R createCacheObject(final String id, final T object, final String ownerId,
+      final long expirationTime);
 
   /** {@inheritDoc} */
   @Override
@@ -116,25 +110,26 @@ public abstract class AbstractRedisIntegrationServiceCache<T extends Serializabl
   @Override
   public void clearExpired() {
     log.trace("clearExpired called ...");
-    
-    final List<ExpirationHelperObject> values = 
+
+    final List<ExpirationHelperObject> values =
         Optional.ofNullable(this.expOps.values(this.getRedisHashName() + "_exp")).orElse(Collections.emptyList());
-    
+
     final long now = System.currentTimeMillis();
     final Object[] forRemoval = values.stream()
         .filter(v -> now > Optional.ofNullable(v.getExpirationTime()).orElse(Long.MAX_VALUE))
         .map(ExpirationHelperObject::getId)
         .toArray(String[]::new);
-    
+
     if (forRemoval.length == 0) {
       log.trace("No expired entries to purge ...");
       return;
     }
-    log.debug("Purging expired cached entries from {}/{}: {}", this.getClass().getSimpleName(), this.getRedisHashName(), forRemoval);
+    log.debug("Purging expired cached entries from {}/{}: {}", this.getClass().getSimpleName(), this.getRedisHashName(),
+        forRemoval);
     this.operations.delete(this.getRedisHashName(), forRemoval);
     this.expOps.delete(this.getRedisHashName() + "_exp", forRemoval);
   }
-  
+
   /**
    * Tests the connection (so that we get failures at start-up).
    * 
@@ -152,7 +147,8 @@ public abstract class AbstractRedisIntegrationServiceCache<T extends Serializabl
    */
   @NoArgsConstructor
   @AllArgsConstructor
-  public static abstract class AbstractRedisCachedObject<T extends Serializable> implements AbstractIntegrationServiceCache.CacheEntry<T> {
+  public static abstract class AbstractRedisCachedObject<T extends Serializable>
+      implements AbstractIntegrationServiceCache.CacheEntry<T> {
 
     /** For serialization. */
     private static final long serialVersionUID = 3566087347789497782L;
@@ -193,7 +189,7 @@ public abstract class AbstractRedisIntegrationServiceCache<T extends Serializabl
     }
 
   }
-  
+
   @Data
   @NoArgsConstructor
   @AllArgsConstructor
@@ -203,6 +199,5 @@ public abstract class AbstractRedisIntegrationServiceCache<T extends Serializabl
     private String id;
     private Long expirationTime;
   }
-
 
 }

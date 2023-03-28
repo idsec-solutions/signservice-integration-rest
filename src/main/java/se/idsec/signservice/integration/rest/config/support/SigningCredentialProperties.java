@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Litsec AB
+ * Copyright 2020-2023 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,28 +15,22 @@
  */
 package se.idsec.signservice.integration.rest.config.support;
 
-import java.security.KeyStore;
-import java.security.PrivateKey;
-import java.security.cert.X509Certificate;
-
-import org.opensaml.security.crypto.KeySupport;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
 import org.springframework.util.Assert;
 
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import se.swedenconnect.security.credential.BasicCredential;
-import se.swedenconnect.security.credential.KeyStoreCredential;
 import se.swedenconnect.security.credential.PkiCredential;
+import se.swedenconnect.security.credential.factory.PkiCredentialConfigurationProperties;
+import se.swedenconnect.security.credential.factory.PkiCredentialFactoryBean;
 
 /**
  * Properties for representing a signing credential.
  *
- * @author Martin Lindström (martin@litsec.se)
+ * @author Martin Lindström
  */
 @Slf4j
-public class SigningCredentialProperties implements InitializingBean {
+public class SigningCredentialProperties extends PkiCredentialConfigurationProperties implements InitializingBean {
 
   /**
    * Tells how the credential is represented.
@@ -49,59 +43,75 @@ public class SigningCredentialProperties implements InitializingBean {
     OPENSAML
   }
 
-  /** The format (tells how the credential is represented). */
-  @Setter
+  /**
+   * The format (tells how the credential is represented). Deprecated.
+   */
   private CredentialFormat format;
 
-  /** The credential name. */
-  @Setter
-  private String name;
-
-  /** Holds the keystore file (KEYSTORE) or private key file (OPENSAML). */
-  @Setter
+  /**
+   * The keystore file or private key file. Deprecated - use {@code resource} for a keystore and {@code private-key} for
+   * a private key file.
+   */
   private Resource file;
 
-  /** Holds the keystore password (KEYSTORE). */
-  @Setter
-  private char[] password;
-
-  /** Holds the type of keystore (KEYSTORE). Defaults to JKS. */
-  @Setter
-  private String storeType;
-
-  /** Holds the keystore alias (KEYSTORE). */
-  @Setter
-  private String alias;
+  /**
+   * Deprecated format for credential.
+   * 
+   * @param format the format
+   */
+  public void setFormat(final CredentialFormat format) {
+    if (format != null) {
+      log.warn("The 'format' property is deprecated");
+      this.format = format;
+    }
+  }
 
   /**
-   * Holds the key password for a keystore (KEYSTORE) and optionally the password for the PKCS#8 private key file
-   * (OPENSAML). If not set it defaults to {@link #password} (KEYSTORE).
+   * The keystore file or private key file. Deprecated - use {@code resource} for a keystore and {@code private-key} for
+   * a private key file.
+   * 
+   * @param file the resource
    */
-  @Setter
-  private char[] keyPassword;
+  public void setFile(final Resource file) {
+    if (file != null) {
+      if (this.format != null && CredentialFormat.KEYSTORE == this.format) {
+        log.warn("The 'file' property is deprecated - use the 'resource' property instead");
+        this.setResource(file);
+      }
+      else if (this.format != null && CredentialFormat.OPENSAML == this.format) {
+        log.warn("The 'file' property is deprecated - use the 'private-key' property instead");
+        this.setPrivateKey(file);
+      }
+      else {
+        log.warn(
+            "The 'file' property is deprecated - use the 'resource' property for keystores and the 'private-key' property for key files");
+        this.file = file;
+      }
+    }
+  }
 
-  /** Holds the certificate of the credential (OPENSAML). */
-  @Setter
-  private X509Certificate certificate;
+  /**
+   * Maps to {@code type}.
+   * 
+   * @param storeType the keystore type
+   */
+  public void setStoreType(final String storeType) {
+    if (storeType != null) {
+      log.warn("The 'store-type' property is deprecated - use 'type'");
+      this.setType(storeType);
+    }
+  }
 
+  /**
+   * Gets a {@link PkiCredential}.
+   * 
+   * @return a {@link PkiCredential}
+   * @throws Exception for errors creating the credential
+   */
   public PkiCredential getSigningCredential() throws Exception {
-    if (CredentialFormat.KEYSTORE.equals(this.format)) {
-      final KeyStoreCredential cred =
-          new KeyStoreCredential(this.file, this.storeType, this.password, this.alias, this.keyPassword);
-      cred.setName(this.name);
-      cred.init();
-      return cred;
-    }
-    else if (CredentialFormat.OPENSAML.equals(this.format)) {
-      final PrivateKey privateKey = KeySupport.decodePrivateKey(this.file.getInputStream(), this.keyPassword);
-      final BasicCredential cred = new BasicCredential(this.certificate, privateKey);
-      cred.setName(this.name);
-      cred.init();
-      return cred;
-    }
-    else {
-      throw new IllegalArgumentException("Unsupported format - " + this.format);
-    }
+    final PkiCredentialFactoryBean factory = new PkiCredentialFactoryBean(this);
+    factory.afterPropertiesSet();
+    return factory.getObject();
   }
 
   /** {@inheritDoc} */
@@ -109,31 +119,19 @@ public class SigningCredentialProperties implements InitializingBean {
   public void afterPropertiesSet() throws Exception {
     if (this.format == null) {
       this.format = CredentialFormat.KEYSTORE;
-      log.info("Credential format is not set, defaulting to {}", this.format);
     }
 
-    Assert.notNull(this.name, "Property 'name' must be set");
-
-    if (CredentialFormat.KEYSTORE.equals(this.format)) {
-      Assert.notNull(this.file, "Property 'file' must be set");
-      Assert.notNull(this.password, "Property 'password' must be set");
-      Assert.hasText(this.alias, "Property 'alias' must be set");
-
-      if (this.storeType == null) {
-        this.storeType = KeyStore.getDefaultType();
-        log.info("Keystore type is not set, defaulting to {}", this.storeType);
+    if (CredentialFormat.OPENSAML == this.format) {
+      if (this.getPrivateKey() == null) {
+        Assert.notNull(this.file, "Format is OPENSAML but privateKey (or file) is not set");
+        this.setPrivateKey(this.file);
       }
-      if (this.keyPassword == null) {
-        this.keyPassword = this.password;
-        log.info("Key password is not set, using the value of 'password'");
-      }
-    }
-    else if (CredentialFormat.OPENSAML.equals(this.format)) {
-      Assert.notNull(this.file, "Property 'file' must be set");
-      Assert.notNull(this.certificate, "Property 'certificate' must be set");
     }
     else {
-      throw new IllegalArgumentException("Unsupported credential format: " + this.format);
+      if (this.getResource() == null) {
+        Assert.notNull(this.file, "Format is KEYSTORE but resource (or file) is not set");
+        this.setResource(this.file);
+      }
     }
   }
 

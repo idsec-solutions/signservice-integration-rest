@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Litsec AB
+ * Copyright 2020-2023 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,11 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * A {@link PermissionEvaluator} that is used to check if a user has permission to use a particular SignService policy.
  * 
- * @author Martin Lindström (martin@litsec.se)
+ * @author Martin Lindström
  */
 @Slf4j
 public class PolicyPermissionEvaluator implements PermissionEvaluator {
-  
+
   /** Symbolic constant for the only known permission handled by this evaluator. */
   public static final String USE_PERMISSION = "use";
 
@@ -37,7 +37,7 @@ public class PolicyPermissionEvaluator implements PermissionEvaluator {
   @Override
   public boolean hasPermission(
       final Authentication authentication, final Object targetDomainObject, final Object permission) {
-    
+
     if (authentication == null || targetDomainObject == null || permission == null) {
       return false;
     }
@@ -53,15 +53,16 @@ public class PolicyPermissionEvaluator implements PermissionEvaluator {
       log.error("Unknown targetDomainObject type: {}", targetDomainObject.getClass().getSimpleName());
       return false;
     }
-    
+
     return AccessControlUtils.hasPolicyAuthority.test(authentication, String.class.cast(targetDomainObject));
   }
 
   /** {@inheritDoc} */
   @Override
   public boolean hasPermission(
-      final Authentication authentication, final Serializable targetId, final String targetType, final Object permission) {
-    
+      final Authentication authentication, final Serializable targetId, final String targetType,
+      final Object permission) {
+
     return false;
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Litsec AB
+ * Copyright 2020-2023 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import org.springframework.security.core.Authentication;
 /**
  * Utility methods for checking access to resources.
  * 
- * @author Martin Lindström (martin@litsec.se)
+ * @author Martin Lindström
  */
 public class AccessControlUtils {
 

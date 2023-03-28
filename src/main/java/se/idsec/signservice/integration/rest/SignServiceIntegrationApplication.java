@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IDsec Solutions AB
+ * Copyright 2020-2023 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,7 +77,7 @@ public class SignServiceIntegrationApplication {
    * @return log filter bean
    */
   @Bean
-  public CommonsRequestLoggingFilter requestLoggingFilter() {
+  CommonsRequestLoggingFilter requestLoggingFilter() {
     CommonsRequestLoggingFilter loggingFilter = new CommonsRequestLoggingFilter();
     loggingFilter.setIncludeClientInfo(true);
     loggingFilter.setIncludeQueryString(true);
@@ -92,7 +92,7 @@ public class SignServiceIntegrationApplication {
    * @return a trace repository
    */
   @Bean
-  public HttpTraceRepository htttpTraceRepository() {
+  HttpTraceRepository htttpTraceRepository() {
     return new InMemoryHttpTraceRepository();
   }
   

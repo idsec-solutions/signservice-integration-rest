@@ -84,36 +84,36 @@ The service can be configured to use different signing credentials for different
 
 A credential is configured with the prefix `signservice.credentials[index].`.
 
-There are two different formats supported, `KEYSTORE` (a JKS or PKCS12) and `OPENSAML` (PKCS#8 encoded private key and the DER-encoded certificate).
+The [credentials-support](https://github.com/swedenconnect/credentials-support) library
+is used to configure and handle credentials. See [PkiCredentialFactoryBean](https://github.com/swedenconnect/credentials-support#generic-pkicredentialfactorybean-for-springboot-users) for
+how to configure a credential.
 
-The table below declares all settings for a credential instance:
+Deprecated configuration:
 
 | Property | Description |
 | :--- | :--- |
-| `format` | The format on the credential, `KEYSTORE` or `OPENSAML`. |
+| ~~`format`~~ | ~~The format on the credential, `KEYSTORE` or `OPENSAML`.~~<br />Not needed - the other properties will tell which type of credential we are configuring. |
 | `name` | The unique name for the credential. |
-| `file` | Holds the keystore (KEYSTORE) or the private key (OPENSAML). |
+| ~~`file`~~ | ~~Holds the keystore (KEYSTORE) or the private key (OPENSAML).~~<br />Use `resource` to indicate a keystore and `private-key` to point at key file. |
 | `password` | The keystore password (for KEYSTORE only). |
-| `store-type` | Holds the type of keystore (KEYSTORE). Defaults to JKS. |
-| `alias` | Holds the keystore alias (KEYSTORE). |
-| `key-password` | Holds the key password for a keystore (KEYSTORE) and optionally the password for the PKCS#8 private key file (OPENSAML). If not set it defaults to `password` (KEYSTORE). |
-| `certificate` | Holds the certificate of the credential (OPENSAML). |
+| ~~`store-type`~~ | ~~Holds the type of keystore (KEYSTORE). Defaults to JKS.~~ |
+| `alias` | Holds the keystore alias. |
+| `key-password` | Holds the key password for a keystore nd optionally the password for the PKCS#8 private key file. If not set it defaults to `password`. |
+| `certificate` | Holds the certificate of the credential. |
 
 
 Example:
 
 ```
-signservice.credentials[0].format=KEYSTORE
 signservice.credentials[0].name=TestMySignature
-signservice.credentials[0].file=${application.config.prefix}sandbox/keys/test-my-signature.jks
-signservice.credentials[0].store-type=JKS
+signservice.credentials[0].resource=file:/etc/keys/test-my-signature.jks
+signservice.credentials[0].type=JKS
 signservice.credentials[0].password=secret
 signservice.credentials[0].alias=test-sign
 signservice.credentials[0].key-password=secret
 
-signservice.credentials[1].format=KEYSTORE
 signservice.credentials[1].name=eduSignTestSigning
-signservice.credentials[1].file=${application.config.prefix}edusign-test/keys/sp-keystore.jks
+signservice.credentials[1].resource=file:/etc/edusign-test/keys/sp-keystore.jks
 signservice.credentials[1].store-type=JKS
 signservice.credentials[1].password=Test1234
 signservice.credentials[1].alias=uploadsign-sp
@@ -256,4 +256,4 @@ If the SignService Integration service is running in a stateful mode it needs to
 
 ---
 
-Copyright &copy; 2020-2021, [IDsec Solutions AB](http://www.idsec.se). Licensed under version 2.0 of the [Apache License](http://www.apache.org/licenses/LICENSE-2.0).
+Copyright &copy; 2020-2023, [IDsec Solutions AB](http://www.idsec.se). Licensed under version 2.0 of the [Apache License](http://www.apache.org/licenses/LICENSE-2.0).

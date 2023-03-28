@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IDsec Solutions AB
+ * Copyright 2020-2023 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import se.idsec.signservice.integration.state.impl.InMemoryIntegrationServiceSta
 /**
  * Configuration class for setting up caches.
  * 
- * @author Martin Lindström (martin@idsec.se)
+ * @author Martin Lindström
  */
 @Configuration
 public class CacheConfiguration {
@@ -57,7 +57,7 @@ public class CacheConfiguration {
    */
   @ConditionalOnProperty(name = "spring.redis.enabled", havingValue = "true", matchIfMissing = false)
   @Bean
-  public RedisTemplate<String, Object> redisTemplate(final RedisConnectionFactory connectionFactory) {
+  RedisTemplate<String, Object> redisTemplate(final RedisConnectionFactory connectionFactory) {
     RedisTemplate<String, Object> template = new RedisTemplate<>();
     template.setConnectionFactory(connectionFactory);
     return template;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Litsec AB
+ * Copyright 2020-2023 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import se.idsec.signservice.integration.core.error.NoAccessException;
 /**
  * Handles errors that occur outside of the controllers.
  *
- * @author Martin Lindström (martin@litsec.se)
+ * @author Martin Lindström
  */
 @Component
 public class CustomErrorAttributes extends DefaultErrorAttributes {

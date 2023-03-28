@@ -1,0 +1,87 @@
+{"properties": [
+  {
+    "name": "application.version",
+    "type": "java.lang.String",
+    "description": "Application version"
+  },
+  {
+    "name": "application.api-version",
+    "type": "java.lang.String",
+    "description": "The version of the API"
+  },
+  {
+    "name": "application.config.prefix",
+    "type": "java.lang.String",
+    "description": "The prefix where configuration files are found"
+  },
+  {
+    "name": "signservice.default-policy-name",
+    "type": "java.lang.String",
+    "description": "Default policy name"
+  },
+  {
+    "name": "signservice.integration.policy-configuration-resource",
+    "type": "java.lang.String",
+    "description": "Location where to find the policy configuration"
+  },
+  {
+    "name": "signservice.security.user-configuration",
+    "type": "java.lang.String",
+    "description": "Location where to find user configuration"
+  },
+  {
+    "name": "signservice.cache.state.max-age",
+    "type": "java.lang.Long",
+    "description": "Maximum age of saved state objects (in milliseconds)"
+  },
+  {
+    "name": "signservice.cache.state.cleanup-interval",
+    "type": "java.lang.Long",
+    "description": "The state cache cleanup interval (in milliseconds)"
+  },
+  {
+    "name": "signservice.cache.document.max-age",
+    "type": "java.lang.Long",
+    "description": "Maximum age of saved documents (in milliseconds)"
+  },
+  {
+    "name": "signservice.cache.document.cleanup-interval",
+    "type": "java.lang.Long",
+    "description": "The document cache cleanup internal (in milliseconds)"
+  },
+  {
+    "name": "spring.redis.enabled",
+    "type": "java.lang.Boolean",
+    "description": "Whether Redis is enabled"
+  },
+  {
+    "name": "signservice.sign-message.enabled",
+    "type": "java.lang.Boolean",
+    "description": "Whether the SignMessage extension is supported"
+  },
+  {
+    "name": "signservice.sign-message.metadata.url",
+    "type": "java.lang.String",
+    "description": "URL from where we download metadata"
+  },
+  {
+    "name": "signservice.sign-message.metadata.validation-certificate",
+    "type": "org.springframework.core.io.Resource",
+    "description": "The certificate used to validate downloaded metadata"
+  },
+  {
+    "name": "tomcat.ajp.enabled",
+    "type": "java.lang.Boolean",
+    "description": "Whether the AJP protocol is active"
+  },
+  {
+    "name": "tomcat.ajp.port",
+    "type": "java.lang.Integer",
+    "description": "The AJP port"
+  },
+  {
+    "name": "tomcat.ajp.remoteauthentication",
+    "type": "java.lang.Boolean",
+    "description": "Whether remote authentication is enabled"
+  }
+]}

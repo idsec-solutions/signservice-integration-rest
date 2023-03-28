@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Litsec AB
+ * Copyright 2020-2023 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import se.idsec.signservice.integration.state.IntegrationServiceStateCache;
 /**
  * Service for cleaning up expired cache entries.
  * 
- * @author Martin Lindström (martin@litsec.se)
+ * @author Martin Lindström
  */
 @Service
 @Slf4j

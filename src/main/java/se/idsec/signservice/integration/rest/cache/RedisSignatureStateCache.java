@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Litsec AB
+ * Copyright 2020-2023 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,10 @@ import se.idsec.signservice.integration.state.IntegrationServiceStateCache;
 /**
  * A Redis {@link IntegrationServiceStateCache}.
  * 
- * @author Martin Lindström (martin@litsec.se)
+ * @author Martin Lindström
  */
-public class RedisSignatureStateCache extends AbstractRedisIntegrationServiceCache<CacheableSignatureState, CachedSignatureState>
+public class RedisSignatureStateCache
+    extends AbstractRedisIntegrationServiceCache<CacheableSignatureState, CachedSignatureState>
     implements IntegrationServiceStateCache {
 
   /**
@@ -69,16 +70,13 @@ public class RedisSignatureStateCache extends AbstractRedisIntegrationServiceCac
     /**
      * An all-args constructor.
      * 
-     * @param id
-     *          the ID
-     * @param object
-     *          the document
-     * @param ownerId
-     *          the owner ID
-     * @param expirationTime
-     *          the expiration time
+     * @param id the ID
+     * @param object the document
+     * @param ownerId the owner ID
+     * @param expirationTime the expiration time
      */
-    public CachedSignatureState(final String id, final CacheableSignatureState object, final String ownerId, final Long expirationTime) {
+    public CachedSignatureState(final String id, final CacheableSignatureState object, final String ownerId,
+        final Long expirationTime) {
       super(id, object, ownerId, expirationTime);
     }
 
