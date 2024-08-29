@@ -19,8 +19,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -59,10 +58,7 @@ import se.idsec.signservice.integration.core.error.BadRequestException;
 import se.idsec.signservice.integration.core.error.ErrorCode;
 import se.idsec.signservice.integration.core.error.InputValidationException;
 import se.idsec.signservice.integration.core.error.SignServiceIntegrationException;
-import se.idsec.signservice.integration.document.pdf.PdfSignaturePageFullException;
-import se.idsec.signservice.integration.document.pdf.PdfSignaturePagePreferences;
-import se.idsec.signservice.integration.document.pdf.PreparePdfSignaturePageInput;
-import se.idsec.signservice.integration.document.pdf.PreparedPdfDocument;
+import se.idsec.signservice.integration.document.pdf.*;
 
 /**
  * Main controller for the Sign Service Integration service.
@@ -151,8 +147,6 @@ class SignServiceIntegrationController {
    * 
    * @param request the HTTP servlet request
    * @param authentication the user authentication object
-   * @param id the ID for the operation (corresponds to the RelayState parameter that was received along with the
-   *          SignResponse)
    * @param processSignResponseInput the input (holds the SignResponse along with the state)
    * @return a SignatureResult
    * @throws SignResponseCancelStatusException if the SignService reported that the user cancelled the signing operation
@@ -239,6 +233,12 @@ class SignServiceIntegrationController {
         throw new InputValidationException("pdfDocument", "Invalid Base64 encoding", e);
       }
     }
+    TbsPdfDocumentIssueHandler issueHandler = new TbsPdfDocumentIssueHandler();
+    List<PdfDocumentIssue> pdfDocumentIssues = issueHandler.identifyFixableIssues(pdfBytes);
+    if (!pdfDocumentIssues.isEmpty()) {
+      log.info("Found PDF document issues {} - attempting to fix them", pdfDocumentIssues);
+      pdfBytes = issueHandler.fixIssues(pdfBytes, pdfDocumentIssues);
+    }
 
     PdfSignaturePagePreferences preferences = input.getSignaturePagePreferences();
     if (preferences == null) {
@@ -246,8 +246,9 @@ class SignServiceIntegrationController {
     }
     preferences.addExtensionValue(SignServiceIntegrationService.OWNER_ID_EXTENSION_KEY, authentication.getName());
 
-    final PreparedPdfDocument preparedPdfDocument = this.signServiceIntegrationService.preparePdfSignaturePage(
+    PreparedPdfDocument preparedPdfDocument = this.signServiceIntegrationService.preparePdfSignaturePage(
         policy, pdfBytes, preferences);
+    preparedPdfDocument.setFixedIssues(pdfDocumentIssues);
 
     log.trace("Response to POST {}:{}{}", request.getServletPath(), System.lineSeparator(),
         this.getJsonString(preparedPdfDocument));

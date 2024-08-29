@@ -17,8 +17,7 @@ package se.idsec.signservice.integration.rest.config;
 
 import java.util.Map;
 
-import javax.annotation.PostConstruct;
-
+import jakarta.annotation.PostConstruct;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.PropertySource;

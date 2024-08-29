@@ -29,6 +29,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.method.configuration.GlobalMethodSecurityConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -38,6 +39,8 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 import lombok.Setter;
+import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import se.idsec.signservice.integration.rest.config.UsersConfigurationProperties.UserEntry;
 import se.idsec.signservice.integration.rest.security.PolicyPermissionEvaluator;
 
@@ -86,6 +89,35 @@ public class SecurityConfiguration {
   }
 
   @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+      .authorizeHttpRequests(authorize -> authorize
+        .requestMatchers(
+          new AntPathRequestMatcher(this.actuatorBasePath + "/**"),
+          new AntPathRequestMatcher("/actuator/**"),
+          new AntPathRequestMatcher("/v1/version", HttpMethod.GET.toString()),
+          new AntPathRequestMatcher("/error")
+        ).permitAll()
+        .requestMatchers(
+          new AntPathRequestMatcher("/v1/policy/list"),
+          new AntPathRequestMatcher("/v1/policy/get/**"),
+          new AntPathRequestMatcher("/v1/create/**", HttpMethod.POST.toString()),
+          new AntPathRequestMatcher("/v1/process/**", HttpMethod.POST.toString()),
+          new AntPathRequestMatcher("/v1/prepare/**", HttpMethod.POST.toString())
+        ).hasAnyRole("USER", "ADMIN")
+        .anyRequest().authenticated()
+      )
+      .sessionManagement(httpSecuritySessionManagementConfigurer ->
+        httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+      .csrf(AbstractHttpConfigurer::disable)
+      .httpBasic(httpSecurityHttpBasicConfigurer -> {});
+
+    return http.build();
+  }
+
+
+/*
+  @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
     http
@@ -108,6 +140,7 @@ public class SecurityConfiguration {
 
     return http.build();
   }
+*/
 
   /**
    * For setting up security checking on method calls.

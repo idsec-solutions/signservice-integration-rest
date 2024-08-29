@@ -19,6 +19,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -112,10 +113,8 @@ public class SignServiceIntegrationExceptionHandler extends ResponseEntityExcept
     return this.handleExceptionInternal(ex, body, new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
   }
 
-  /** {@inheritDoc} */
   @Override
-  protected ResponseEntity<Object> handleExceptionInternal(
-      final Exception ex, Object body, final HttpHeaders headers, final HttpStatus status, final WebRequest request) {
+  protected ResponseEntity<Object> handleExceptionInternal(final Exception ex, Object body, final HttpHeaders headers, final HttpStatusCode status, final WebRequest request) {
 
     if (body == null) {
       ErrorCode errorCode = null;

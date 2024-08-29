@@ -20,8 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.actuate.trace.http.HttpTraceRepository;
-import org.springframework.boot.actuate.trace.http.InMemoryHttpTraceRepository;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
@@ -86,16 +84,7 @@ public class SignServiceIntegrationApplication {
     return loggingFilter;
   }
 
-  /**
-   * To allow Spring Boot actuator's httptrace.
-   * 
-   * @return a trace repository
-   */
-  @Bean
-  HttpTraceRepository htttpTraceRepository() {
-    return new InMemoryHttpTraceRepository();
-  }
-  
+
   /**
    * Content loader using Spring.
    */

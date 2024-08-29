@@ -50,10 +50,12 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>  
-    <java.version>11</java.version>
-    
-    <sign.api.version>1.3.0</sign.api.version>
-    <spring.boot.version>2.7.10</spring.boot.version>
+    <java.version>17</java.version>
+
+    <sign.bom.version>2.1.0-SNAPSHOT</sign.bom.version>
+    <sign.api.version>2.1.0-SNAPSHOT</sign.api.version>
+    <sign.integration.version>2.1.0-SNAPSHOT</sign.integration.version>
+    <spring.boot.version>3.3.2</spring.boot.version>
   </properties>
 
   <distributionManagement>
@@ -92,7 +94,7 @@
       <dependency>
         <groupId>se.idsec.signservice.commons</groupId>
         <artifactId>signservice-bom</artifactId>
-        <version>1.2.4</version>
+        <version>${sign.bom.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -100,7 +102,7 @@
       <dependency>
         <groupId>se.swedenconnect.security</groupId>
         <artifactId>credentials-support</artifactId>
-        <version>1.2.6</version>
+        <version>1.3.2</version>
       </dependency>      
 
       <dependency>
@@ -114,7 +116,7 @@
       <dependency>
         <groupId>se.idsec.signservice.integration</groupId>
         <artifactId>signservice-integration-impl</artifactId>
-        <version>1.3.4</version>
+        <version>${sign.integration.version}</version>
         <type>jar</type>
         <scope>compile</scope>
       </dependency>
@@ -122,29 +124,34 @@
       <dependency>
         <groupId>se.idsec.signservice.integration</groupId>
         <artifactId>signservice-integration-xml</artifactId>
-        <version>1.3.4</version>
+        <version>${sign.integration.version}</version>
         <type>jar</type>
         <scope>compile</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>se.idsec.signservice.integration</groupId>
-            <artifactId>signservice-integration-impl</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
 
       <dependency>
         <groupId>se.idsec.signservice.integration</groupId>
         <artifactId>signservice-integration-pdf</artifactId>
-        <version>1.3.4</version>
+        <version>${sign.integration.version}</version>
         <type>jar</type>
         <scope>compile</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>se.idsec.signservice.integration</groupId>
-            <artifactId>signservice-integration-impl</artifactId>
-          </exclusion>
-        </exclusions>
+      </dependency>
+
+      <!-- Dependency convergence fixes -->
+      <dependency>
+        <groupId>com.google.errorprone</groupId>
+        <artifactId>error_prone_annotations</artifactId>
+        <version>2.29.1</version>
+      </dependency>
+      <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>servlet-api</artifactId>
+        <version>2.4</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-text</artifactId>
+        <version>1.11.0</version>
       </dependency>
 
     </dependencies>
@@ -363,7 +370,7 @@
               <windowtitle>SignService Integration REST SERVICE - ${project.version}</windowtitle>
 
               <sourcepath>target/generated-sources/delombok</sourcepath>
-              <additionalparam>-Xdoclint:all -Xdoclint:-missing</additionalparam>
+              <doclint>all,-missing</doclint>
               <additionalOptions>-Xdoclint:all -Xdoclint:-missing</additionalOptions>
               <additionalJOptions>
                 <additionalJOption>-Xdoclint:all</additionalJOption>
