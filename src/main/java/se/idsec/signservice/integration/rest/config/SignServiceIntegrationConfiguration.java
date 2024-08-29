@@ -41,6 +41,7 @@ import se.idsec.signservice.integration.document.SignedDocumentProcessor;
 import se.idsec.signservice.integration.document.TbsDocumentProcessor;
 import se.idsec.signservice.integration.document.pdf.PdfSignedDocumentProcessor;
 import se.idsec.signservice.integration.document.pdf.PdfTbsDocumentProcessor;
+import se.idsec.signservice.integration.document.pdf.TbsPdfDocumentIssueHandler;
 import se.idsec.signservice.integration.document.pdf.signpage.DefaultPdfSignaturePagePreparator;
 import se.idsec.signservice.integration.document.xml.XmlSignedDocumentProcessor;
 import se.idsec.signservice.integration.document.xml.XmlTbsDocumentProcessor;
@@ -303,6 +304,16 @@ public class SignServiceIntegrationConfiguration {
     final DefaultConfigurationManager mgr = new DefaultConfigurationManager(properties.getConfig());
     mgr.setDefaultPolicyName(this.defaultPolicyName);
     return mgr;
+  }
+
+  /**
+   * Gets the {@link TbsPdfDocumentIssueHandler} bean.
+   *
+   * @return the {@link TbsPdfDocumentIssueHandler} bean
+   */
+  @Bean
+  TbsPdfDocumentIssueHandler tbsPdfDocumentIssueHandler() {
+    return new TbsPdfDocumentIssueHandler();
   }
 
 }

@@ -75,6 +75,11 @@ class SignServiceIntegrationController {
   @Autowired
   private ExtendedSignServiceIntegrationService signServiceIntegrationService;
 
+  /** PDF document issue handler */
+  @Setter
+  @Autowired
+  private TbsPdfDocumentIssueHandler issueHandler;
+
   // For JSON serialization into logs.
   private ObjectMapper mapper = new ObjectMapper();
 
@@ -233,7 +238,6 @@ class SignServiceIntegrationController {
         throw new InputValidationException("pdfDocument", "Invalid Base64 encoding", e);
       }
     }
-    TbsPdfDocumentIssueHandler issueHandler = new TbsPdfDocumentIssueHandler();
     List<PdfDocumentIssue> pdfDocumentIssues = issueHandler.identifyFixableIssues(pdfBytes);
     if (!pdfDocumentIssues.isEmpty()) {
       log.info("Found PDF document issues {} - attempting to fix them", pdfDocumentIssues);
