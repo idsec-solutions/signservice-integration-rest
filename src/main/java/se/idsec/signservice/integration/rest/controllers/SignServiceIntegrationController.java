@@ -58,7 +58,12 @@ import se.idsec.signservice.integration.core.error.BadRequestException;
 import se.idsec.signservice.integration.core.error.ErrorCode;
 import se.idsec.signservice.integration.core.error.InputValidationException;
 import se.idsec.signservice.integration.core.error.SignServiceIntegrationException;
-import se.idsec.signservice.integration.document.pdf.*;
+import se.idsec.signservice.integration.document.pdf.PdfDocumentIssue;
+import se.idsec.signservice.integration.document.pdf.PdfSignaturePageFullException;
+import se.idsec.signservice.integration.document.pdf.PdfSignaturePagePreferences;
+import se.idsec.signservice.integration.document.pdf.PreparePdfSignaturePageInput;
+import se.idsec.signservice.integration.document.pdf.PreparedPdfDocument;
+import se.idsec.signservice.integration.document.pdf.TbsPdfDocumentIssueHandler;
 
 /**
  * Main controller for the Sign Service Integration service.
