@@ -1,4 +1,4 @@
-FROM openjdk:11-jre
+FROM openjdk:17-jdk-slim
 
 VOLUME /etc/signservice
 RUN mkdir /opt/signservice
