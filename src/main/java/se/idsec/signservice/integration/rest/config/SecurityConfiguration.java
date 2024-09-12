@@ -23,10 +23,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
-import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
-import org.springframework.security.config.annotation.method.configuration.GlobalMethodSecurityConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -39,10 +36,8 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 import lombok.Setter;
-import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import se.idsec.signservice.integration.rest.config.UsersConfigurationProperties.UserEntry;
-import se.idsec.signservice.integration.rest.security.PolicyPermissionEvaluator;
 
 /**
  * Security configuration.
@@ -50,6 +45,7 @@ import se.idsec.signservice.integration.rest.security.PolicyPermissionEvaluator;
  * @author Martin Lindström
  */
 @Configuration
+@EnableMethodSecurity
 @EnableWebSecurity
 public class SecurityConfiguration {
 
@@ -61,15 +57,6 @@ public class SecurityConfiguration {
   @Autowired
   private UsersConfigurationProperties userConfiguration;
 
-  /**
-   * Gets the permission evaluator used to check if a user has permissions on a particular policy.
-   * 
-   * @return the PolicyPermissionEvaluator bean
-   */
-  @Bean
-  PolicyPermissionEvaluator policyPermissionEvaluator() {
-    return new PolicyPermissionEvaluator();
-  }
 
   @Bean
   UserDetailsService userDetailsService() {
@@ -113,53 +100,6 @@ public class SecurityConfiguration {
       .httpBasic(httpSecurityHttpBasicConfigurer -> {});
 
     return http.build();
-  }
-
-
-/*
-  @Bean
-  SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
-    http
-        .userDetailsService(this.userDetailsService())
-        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        .and()
-        .csrf().disable()
-        .authorizeRequests()
-        .antMatchers(this.actuatorBasePath + "/**").permitAll()
-        .antMatchers("/actuator/**").permitAll()
-        .antMatchers(HttpMethod.GET, "/v1/version").permitAll()
-        .antMatchers(HttpMethod.GET, "/v1/policy/list", "/v1/policy/get/**").hasAnyRole("USER", "ADMIN")
-        .antMatchers(HttpMethod.POST, "/v1/create/**").hasAnyRole("USER", "ADMIN")
-        .antMatchers(HttpMethod.POST, "/v1/process/**").hasAnyRole("USER", "ADMIN")
-        .antMatchers(HttpMethod.POST, "/v1/prepare/**").hasAnyRole("USER", "ADMIN")
-        .antMatchers("/error").permitAll()
-        .anyRequest().denyAll()
-        .and()
-        .httpBasic();
-
-    return http.build();
-  }
-*/
-
-  /**
-   * For setting up security checking on method calls.
-   */
-  @Configuration
-  @EnableGlobalMethodSecurity(prePostEnabled = true)
-  public static class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
-
-    @Setter
-    @Autowired
-    private PolicyPermissionEvaluator policyPermissionEvaluator;
-
-    /** {@inheritDoc} */
-    @Override
-    protected MethodSecurityExpressionHandler createExpressionHandler() {
-      DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
-      expressionHandler.setPermissionEvaluator(this.policyPermissionEvaluator);
-      return expressionHandler;
-    }
   }
 
 }

@@ -15,12 +15,11 @@
  */
 package se.idsec.signservice.integration.rest.security;
 
-import java.io.Serializable;
-
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 /**
  * A {@link PermissionEvaluator} that is used to check if a user has permission to use a particular SignService policy.
@@ -28,13 +27,13 @@ import lombok.extern.slf4j.Slf4j;
  * @author Martin Lindström
  */
 @Slf4j
-public class PolicyPermissionEvaluator implements PermissionEvaluator {
+@Component("evaluator")
+public class PolicyPermissionEvaluator {
 
   /** Symbolic constant for the only known permission handled by this evaluator. */
   public static final String USE_PERMISSION = "use";
 
   /** {@inheritDoc} */
-  @Override
   public boolean hasPermission(
       final Authentication authentication, final Object targetDomainObject, final Object permission) {
 
@@ -55,15 +54,6 @@ public class PolicyPermissionEvaluator implements PermissionEvaluator {
     }
 
     return AccessControlUtils.hasPolicyAuthority.test(authentication, String.class.cast(targetDomainObject));
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public boolean hasPermission(
-      final Authentication authentication, final Serializable targetId, final String targetType,
-      final Object permission) {
-
-    return false;
   }
 
 }

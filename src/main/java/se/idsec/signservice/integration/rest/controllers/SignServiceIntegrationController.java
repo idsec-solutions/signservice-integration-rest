@@ -26,6 +26,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -111,13 +112,13 @@ class SignServiceIntegrationController {
    * @throws InputValidationException if the provided input does not validate correctly
    * @throws SignServiceIntegrationException for processing errors
    */
-  @PreAuthorize("hasPermission(#policy, 'use')")
+  @PreAuthorize("@evaluator.hasPermission(authentication, #policy, 'use')")
   @PostMapping(value = "/create/{policy}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   public SignRequestData createSignRequest(
       final HttpServletRequest request,
       final Authentication authentication,
-      @PathVariable("policy") final String policy,
+      @PathVariable("policy") @P("policy") final String policy,
       @RequestBody final SignRequestInput signRequestInput)
       throws InputValidationException, SignServiceIntegrationException {
 
@@ -219,13 +220,13 @@ class SignServiceIntegrationController {
    * @throws PdfSignaturePageFullException if the PDF document contains more signatures than there is room for in the
    *           PDF signature page (and {@link PdfSignaturePagePreferences#isFailWhenSignPageFull()} evaluates to true)
    */
-  @PreAuthorize("hasPermission(#policy, 'use')")
+  @PreAuthorize("@evaluator.hasPermission(authentication, #policy, 'use')")
   @PostMapping(value = "/prepare/{policy}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   public PreparedPdfDocument preparePdfSignaturePage(
       final HttpServletRequest request,
       final Authentication authentication,
-      @PathVariable("policy") final String policy,
+      @PathVariable("policy") @P("policy") final String policy,
       @RequestBody final PreparePdfSignaturePageInput input)
       throws InputValidationException, SignServiceIntegrationException, PdfSignaturePageFullException {
 
@@ -265,7 +266,7 @@ class SignServiceIntegrationController {
     return preparedPdfDocument;
   }
 
-  @PostFilter("hasPermission(filterObject, 'use')")
+  @PostFilter("@evaluator.hasPermission(authentication, filterObject, 'use')")
   @GetMapping(value = "/policy/list", produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   public List<String> listPolicies(final HttpServletRequest request, final Authentication authentication) {
@@ -279,13 +280,13 @@ class SignServiceIntegrationController {
     return new ArrayList<>(this.signServiceIntegrationService.getPolicies());
   }
 
-  @PreAuthorize("hasPermission(#policy, 'use')")
+  @PreAuthorize("@evaluator.hasPermission(authentication, #policy, 'use')")
   @GetMapping(value = "/policy/get/{policy}", produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   public IntegrationServiceDefaultConfiguration getPolicy(
       final HttpServletRequest request,
       final Authentication authentication,
-      @PathVariable("policy") final String policy) throws PolicyNotFoundException {
+      @PathVariable("policy") @P("policy") final String policy) throws PolicyNotFoundException {
 
     log.debug("Processing GET request '{}' from '{}'", request.getServletPath(), request.getRemoteAddr());
 
