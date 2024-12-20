@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IDsec Solutions AB
+ * Copyright 2020-2024 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,6 @@
  */
 package se.idsec.signservice.integration.rest;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -28,14 +24,17 @@ import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
-
 import se.idsec.signservice.integration.SignServiceIntegrationServiceInitializer;
 import se.idsec.signservice.integration.core.ContentLoader;
 import se.idsec.signservice.integration.core.ContentLoaderSingleton;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
  * Application main.
- * 
+ *
  * @author Martin Lindström (martin@idsec.se)
  */
 @SpringBootApplication
@@ -44,11 +43,10 @@ public class SignServiceIntegrationApplication {
 
   /**
    * Program main.
-   * 
-   * @param args
-   *          program arguments
+   *
+   * @param args program arguments
    */
-  public static void main(String[] args) {
+  public static void main(final String[] args) {
     SpringApplication.run(SignServiceIntegrationApplication.class, args);
   }
 
@@ -60,23 +58,23 @@ public class SignServiceIntegrationApplication {
   public static class Initializer {
 
     public Initializer() throws Exception {
-      
-      // Workaround to avoid reflection on Java 11
+
+      // Workaround to avoid reflection
       //
       ((ContentLoaderSingleton) ContentLoaderSingleton.getInstance()).setContentLoader(new SpringContentLoader());
- 
+
       SignServiceIntegrationServiceInitializer.initialize();
     }
   }
 
   /**
    * Provides logging of requests.
-   * 
+   *
    * @return log filter bean
    */
   @Bean
   CommonsRequestLoggingFilter requestLoggingFilter() {
-    CommonsRequestLoggingFilter loggingFilter = new CommonsRequestLoggingFilter();
+    final CommonsRequestLoggingFilter loggingFilter = new CommonsRequestLoggingFilter();
     loggingFilter.setIncludeClientInfo(true);
     loggingFilter.setIncludeQueryString(true);
     loggingFilter.setIncludePayload(true);
@@ -84,14 +82,13 @@ public class SignServiceIntegrationApplication {
     return loggingFilter;
   }
 
-
   /**
    * Content loader using Spring.
    */
   private static class SpringContentLoader implements ContentLoader {
-    
+
     /** Spring resource loader. */
-    private DefaultResourceLoader loader = new DefaultResourceLoader();
+    private final DefaultResourceLoader loader = new DefaultResourceLoader();
 
     /** {@inheritDoc} */
     @Override
@@ -100,19 +97,19 @@ public class SignServiceIntegrationApplication {
         throw new IOException("resource is null");
       }
       final String _resource = resource.startsWith("/") ? "file://" + resource : resource;
-      
+
       final InputStream is = this.loader.getResource(_resource).getInputStream();
-      
+
       final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
       int nRead;
-      byte[] data = new byte[4096];
+      final byte[] data = new byte[4096];
       while ((nRead = is.read(data, 0, data.length)) != -1) {
         buffer.write(data, 0, nRead);
       }
       buffer.flush();
       return buffer.toByteArray();
     }
-    
+
   }
 
 }

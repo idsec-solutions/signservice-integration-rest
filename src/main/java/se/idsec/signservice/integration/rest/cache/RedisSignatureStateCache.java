@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IDsec Solutions AB
+ * Copyright 2020-2024 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,15 @@
 package se.idsec.signservice.integration.rest.cache;
 
 import org.springframework.data.redis.core.RedisTemplate;
-
-import se.idsec.signservice.integration.rest.cache.AbstractRedisIntegrationServiceCache.AbstractRedisCachedObject;
 import se.idsec.signservice.integration.rest.cache.RedisSignatureStateCache.CachedSignatureState;
 import se.idsec.signservice.integration.state.CacheableSignatureState;
 import se.idsec.signservice.integration.state.IntegrationServiceStateCache;
 
+import java.io.Serial;
+
 /**
  * A Redis {@link IntegrationServiceStateCache}.
- * 
+ *
  * @author Martin Lindström
  */
 public class RedisSignatureStateCache
@@ -33,7 +33,7 @@ public class RedisSignatureStateCache
 
   /**
    * Constructor.
-   * 
+   *
    * @param redisTemplate the Redis template
    */
   public RedisSignatureStateCache(final RedisTemplate<String, Object> redisTemplate) {
@@ -59,6 +59,7 @@ public class RedisSignatureStateCache
   public static class CachedSignatureState extends AbstractRedisCachedObject<CacheableSignatureState> {
 
     /** For serialization. */
+    @Serial
     private static final long serialVersionUID = -3427745821799588985L;
 
     /**
@@ -69,7 +70,7 @@ public class RedisSignatureStateCache
 
     /**
      * An all-args constructor.
-     * 
+     *
      * @param id the ID
      * @param object the document
      * @param ownerId the owner ID

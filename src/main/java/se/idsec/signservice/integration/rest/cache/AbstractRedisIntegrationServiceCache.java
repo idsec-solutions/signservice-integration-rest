@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IDsec Solutions AB
+ * Copyright 2020-2024 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,31 +15,30 @@
  */
 package se.idsec.signservice.integration.rest.cache;
 
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
 import jakarta.annotation.PostConstruct;
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.RedisTemplate;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import se.idsec.signservice.integration.core.IntegrationServiceCache;
 import se.idsec.signservice.integration.core.impl.AbstractIntegrationServiceCache;
 import se.idsec.signservice.integration.rest.cache.AbstractRedisIntegrationServiceCache.AbstractRedisCachedObject;
 
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
 /**
  * Abstract base class for implemeting the {@link IntegrationServiceCache} using Redis.
- * 
+ *
  * @param <T> the actual type that is cached
  * @param <R> the type encapsulating the objects that are cached
- * 
  * @author Martin Lindström
  */
 @Slf4j
@@ -50,14 +49,14 @@ public abstract class AbstractRedisIntegrationServiceCache<T extends Serializabl
   private final RedisTemplate<String, Object> redisTemplate;
 
   /** The Redis hash operations object. */
-  private HashOperations<String, String, R> operations;
+  private final HashOperations<String, String, R> operations;
 
   /** For keeping a small cache so that we can check expired entries (Redis doesn't support TTL on each entry). */
-  private HashOperations<String, String, ExpirationHelperObject> expOps;
+  private final HashOperations<String, String, ExpirationHelperObject> expOps;
 
   /**
    * Constructor.
-   * 
+   *
    * @param redisTemplate the Redis template
    */
   public AbstractRedisIntegrationServiceCache(final RedisTemplate<String, Object> redisTemplate) {
@@ -68,14 +67,14 @@ public abstract class AbstractRedisIntegrationServiceCache<T extends Serializabl
 
   /**
    * Gets the Redis hash key for this object's type of cacheable objects.
-   * 
+   *
    * @return a string holding the hash name
    */
   protected abstract String getRedisHashName();
 
   /**
    * Creates a cacheable object.
-   * 
+   *
    * @param id the ID
    * @param object the actual object to cache
    * @param ownerId the owner id
@@ -131,18 +130,18 @@ public abstract class AbstractRedisIntegrationServiceCache<T extends Serializabl
 
   /**
    * Tests the connection (so that we get failures at start-up).
-   * 
+   *
    * @throws Exception for connection errors
    */
   @PostConstruct
   public void testConnection() throws Exception {
     log.debug("Checking connection for Redis hash '{}' ...", this.getRedisHashName());
-    Long size = this.operations.size(this.getRedisHashName());
+    final Long size = this.operations.size(this.getRedisHashName());
     log.debug("Size for Redis hash '{}' is '{}'", this.getRedisHashName(), size);
   }
 
   /**
-   * Abstract base class for a object that is cached using Redis.
+   * Abstract base class for an object that is cached using Redis.
    */
   @NoArgsConstructor
   @AllArgsConstructor
@@ -150,6 +149,7 @@ public abstract class AbstractRedisIntegrationServiceCache<T extends Serializabl
       implements AbstractIntegrationServiceCache.CacheEntry<T> {
 
     /** For serialization. */
+    @Serial
     private static final long serialVersionUID = 3566087347789497782L;
 
     /** The ID. */
@@ -194,6 +194,7 @@ public abstract class AbstractRedisIntegrationServiceCache<T extends Serializabl
   @AllArgsConstructor
   private static class ExpirationHelperObject implements Serializable {
     /** For serializing. */
+    @Serial
     private static final long serialVersionUID = -3004136054046290749L;
     private String id;
     private Long expirationTime;

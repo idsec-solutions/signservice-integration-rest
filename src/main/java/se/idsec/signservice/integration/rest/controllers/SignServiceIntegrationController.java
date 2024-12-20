@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IDsec Solutions AB
+ * Copyright 2020-2024 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,15 @@
  */
 package se.idsec.signservice.integration.rest.controllers;
 
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,26 +34,16 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
+import se.idsec.signservice.integration.ApiVersion;
 import se.idsec.signservice.integration.ExtendedSignServiceIntegrationService;
 import se.idsec.signservice.integration.ProcessSignResponseInput;
 import se.idsec.signservice.integration.SignRequestData;
 import se.idsec.signservice.integration.SignRequestInput;
 import se.idsec.signservice.integration.SignResponseCancelStatusException;
 import se.idsec.signservice.integration.SignResponseErrorStatusException;
-import se.idsec.signservice.integration.SignResponseProcessingParameters;
-import se.idsec.signservice.integration.SignServiceIntegrationService;
 import se.idsec.signservice.integration.SignatureResult;
 import se.idsec.signservice.integration.config.IntegrationServiceDefaultConfiguration;
 import se.idsec.signservice.integration.config.PolicyNotFoundException;
@@ -59,16 +51,18 @@ import se.idsec.signservice.integration.core.error.BadRequestException;
 import se.idsec.signservice.integration.core.error.ErrorCode;
 import se.idsec.signservice.integration.core.error.InputValidationException;
 import se.idsec.signservice.integration.core.error.SignServiceIntegrationException;
-import se.idsec.signservice.integration.document.pdf.PdfDocumentIssue;
 import se.idsec.signservice.integration.document.pdf.PdfSignaturePageFullException;
 import se.idsec.signservice.integration.document.pdf.PdfSignaturePagePreferences;
 import se.idsec.signservice.integration.document.pdf.PreparePdfSignaturePageInput;
 import se.idsec.signservice.integration.document.pdf.PreparedPdfDocument;
-import se.idsec.signservice.integration.document.pdf.TbsPdfDocumentIssueHandler;
+
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
 
 /**
  * Main controller for the Sign Service Integration service.
- * 
+ *
  * @author Martin Lindström
  */
 @RestController
@@ -77,33 +71,26 @@ import se.idsec.signservice.integration.document.pdf.TbsPdfDocumentIssueHandler;
 class SignServiceIntegrationController {
 
   /** The service logic. */
-  @Setter
-  @Autowired
-  private ExtendedSignServiceIntegrationService signServiceIntegrationService;
-
-  /** PDF document issue handler */
-  @Setter
-  @Autowired
-  private TbsPdfDocumentIssueHandler issueHandler;
+  private final ExtendedSignServiceIntegrationService signServiceIntegrationService;
 
   // For JSON serialization into logs.
-  private ObjectMapper mapper = new ObjectMapper();
-
-  @Setter
-  @Value("${application.api-version:-}")
-  private String apiVersion;
+  private final ObjectMapper mapper;
 
   /**
    * Constructor.
+   *
+   * @param signServiceIntegrationService the service logic
    */
-  public SignServiceIntegrationController() {
+  public SignServiceIntegrationController(final ExtendedSignServiceIntegrationService signServiceIntegrationService) {
+    this.mapper = new ObjectMapper();
     this.mapper.setSerializationInclusion(Include.NON_NULL);
+    this.signServiceIntegrationService = signServiceIntegrationService;
   }
 
   /**
    * Endpoint for creating the sign request data, i.e., called to obtain the data needed to initiate a signature
    * operation.
-   * 
+   *
    * @param request the HTTP servlet request
    * @param authentication the user authentication object
    * @param policy the policy for the operation
@@ -138,13 +125,10 @@ class SignServiceIntegrationController {
       throw new InputValidationException("policy", "Supplied policy in input does not match URI");
     }
 
-    // Set the caller (needed to supported cached documents) ...
-    //
-    signRequestInput.addExtensionValue(SignServiceIntegrationService.OWNER_ID_EXTENSION_KEY, authentication.getName());
-
     // Invoke the API implementation and create a SignRequestData ...
     //
-    final SignRequestData signRequestData = this.signServiceIntegrationService.createSignRequest(signRequestInput);
+    final SignRequestData signRequestData =
+        this.signServiceIntegrationService.createSignRequest(signRequestInput, authentication.getName());
 
     log.trace("Response to POST {}:{}{}", request.getServletPath(), System.lineSeparator(),
         this.getJsonString(signRequestData));
@@ -155,13 +139,15 @@ class SignServiceIntegrationController {
   /**
    * Endpoint that processes a SignResponse data that was received from the sign service and returns a
    * {@link SignatureResult}.
-   * 
+   *
    * @param request the HTTP servlet request
    * @param authentication the user authentication object
    * @param processSignResponseInput the input (holds the SignResponse along with the state)
    * @return a SignatureResult
-   * @throws SignResponseCancelStatusException if the SignService reported that the user cancelled the signing operation
-   * @throws SignResponseErrorStatusException if the SignService reported an error during processing of the SignRequest
+   * @throws SignResponseCancelStatusException if the SignService reported that the user cancelled the signing
+   *     operation
+   * @throws SignResponseErrorStatusException if the SignService reported an error during processing of the
+   *     SignRequest
    * @throws SignServiceIntegrationException for processing errors
    */
   @PostMapping(value = "/process", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -181,24 +167,16 @@ class SignServiceIntegrationController {
     // Make sure we have the state ...
     //
     if (processSignResponseInput.getState() == null || processSignResponseInput.getState().getId() == null) {
-      final String msg = String.format("Can not process SignResponse with ID '%s' - No state is available");
+      final String msg = "Can not process SignResponse - No state is available";
       log.info("{} [user='{}', client-ip'{}']", msg, authentication.getName(), request.getRemoteAddr());
       throw new BadRequestException(new ErrorCode.Code("session"), msg);
     }
-
-    // Set the caller (needed for access checking) ...
-    //
-    SignResponseProcessingParameters parameters = processSignResponseInput.getParameters();
-    if (parameters == null) {
-      parameters = new SignResponseProcessingParameters();
-    }
-    parameters.addExtensionValue(SignServiceIntegrationService.OWNER_ID_EXTENSION_KEY, authentication.getName());
 
     // Invoke the API implementation and create a SignResponse.
     //
     final SignatureResult signatureResult = this.signServiceIntegrationService.processSignResponse(
         processSignResponseInput.getSignResponse(), processSignResponseInput.getRelayState(),
-        processSignResponseInput.getState(), parameters);
+        processSignResponseInput.getState(), processSignResponseInput.getParameters(), authentication.getName());
 
     log.trace("Response to POST {}:{}{}", request.getServletPath(), System.lineSeparator(),
         this.getJsonString(signatureResult));
@@ -209,7 +187,7 @@ class SignServiceIntegrationController {
   /**
    * Endpoint the gets a prepared PDF document possible containing a PDF signature image along with placement
    * indications for a PDF signature image.
-   * 
+   *
    * @param request the HTTP request
    * @param authentication the user authentication object
    * @param policy the policy for the operation
@@ -217,8 +195,8 @@ class SignServiceIntegrationController {
    * @return a PreparedPdfDocument object
    * @throws InputValidationException for input validation errors
    * @throws SignServiceIntegrationException for processing errors
-   * @throws PdfSignaturePageFullException if the PDF document contains more signatures than there is room for in the
-   *           PDF signature page (and {@link PdfSignaturePagePreferences#isFailWhenSignPageFull()} evaluates to true)
+   * @throws PdfSignaturePageFullException if the PDF document contains more signatures than there is room for in
+   *     the PDF signature page (and {@link PdfSignaturePagePreferences#isFailWhenSignPageFull()} evaluates to true)
    */
   @PreAuthorize("@evaluator.hasPermission(authentication, #policy, 'use')")
   @PostMapping(value = "/prepare/{policy}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -227,7 +205,8 @@ class SignServiceIntegrationController {
       final HttpServletRequest request,
       final Authentication authentication,
       @PathVariable("policy") @P("policy") final String policy,
-      @RequestBody final PreparePdfSignaturePageInput input)
+      @RequestBody final PreparePdfSignaturePageInput input,
+      @RequestParam(value = "returnDocReference", required = false) final Boolean returnDocumentReference)
       throws InputValidationException, SignServiceIntegrationException, PdfSignaturePageFullException {
 
     log.debug("Processing POST request '{}' [user='{}', client-ip'{}']",
@@ -240,25 +219,13 @@ class SignServiceIntegrationController {
       try {
         pdfBytes = Base64.getDecoder().decode(input.getPdfDocument());
       }
-      catch (IllegalArgumentException e) {
+      catch (final IllegalArgumentException e) {
         throw new InputValidationException("pdfDocument", "Invalid Base64 encoding", e);
       }
     }
-    List<PdfDocumentIssue> pdfDocumentIssues = issueHandler.identifyFixableIssues(pdfBytes);
-    if (!pdfDocumentIssues.isEmpty()) {
-      log.info("Found PDF document issues {} - attempting to fix them", pdfDocumentIssues);
-      pdfBytes = issueHandler.fixIssues(pdfBytes, pdfDocumentIssues);
-    }
 
-    PdfSignaturePagePreferences preferences = input.getSignaturePagePreferences();
-    if (preferences == null) {
-      preferences = new PdfSignaturePagePreferences();
-    }
-    preferences.addExtensionValue(SignServiceIntegrationService.OWNER_ID_EXTENSION_KEY, authentication.getName());
-
-    PreparedPdfDocument preparedPdfDocument = this.signServiceIntegrationService.preparePdfSignaturePage(
-        policy, pdfBytes, preferences);
-    preparedPdfDocument.setFixedIssues(pdfDocumentIssues);
+    final PreparedPdfDocument preparedPdfDocument = this.signServiceIntegrationService.preparePdfDocument(
+        policy, pdfBytes, input.getSignaturePagePreferences(), returnDocumentReference, authentication.getName());
 
     log.trace("Response to POST {}:{}{}", request.getServletPath(), System.lineSeparator(),
         this.getJsonString(preparedPdfDocument));
@@ -296,29 +263,33 @@ class SignServiceIntegrationController {
   @GetMapping(value = "/version", produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   public VersionObject getVersion() {
-    return new VersionObject(this.signServiceIntegrationService.getVersion(), this.apiVersion);
+    return new VersionObject(this.signServiceIntegrationService.getVersion(), ApiVersion.getVersion());
   }
 
   @Data
   @NoArgsConstructor
   @AllArgsConstructor
-  private static final class VersionObject {
+  public static final class VersionObject {
+
+    @JsonProperty("version")
     private String version;
+
+    @JsonProperty("api-version")
     private String apiVersion;
   }
 
   /**
    * Serializes the supplied object into a JSON string. For logging purposes.
-   * 
+   *
    * @param object object to serialize
    * @return the serialized string.
    */
   private String getJsonString(final Object object) {
     try {
-      final ObjectWriter writer = mapper.writerWithDefaultPrettyPrinter();
+      final ObjectWriter writer = this.mapper.writerWithDefaultPrettyPrinter();
       return writer.writeValueAsString(object);
     }
-    catch (Exception e) {
+    catch (final Exception e) {
       return "Failed to serialize JSON object - " + e.getMessage();
     }
   }

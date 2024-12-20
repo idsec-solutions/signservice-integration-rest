@@ -10,7 +10,9 @@ A RESTful Web Service implementing the [SignService Integration API](https://git
 
 * [Configuration of application](https://idsec-solutions.github.io/signservice-integration-rest/configuration.html)
 
-* [Release Notes](https://idsec-solutions.github.io/signservice-integration-rest/release-notes.md)
+* [Example signature flow using the Signature Service Integration REST-Service](sample-flow.html)
+
+* [Release Notes](https://idsec-solutions.github.io/signservice-integration-rest/release-notes.html)
 
 
 ---

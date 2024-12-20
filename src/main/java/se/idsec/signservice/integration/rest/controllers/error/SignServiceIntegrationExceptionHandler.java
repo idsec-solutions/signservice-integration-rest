@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IDsec Solutions AB
+ * Copyright 2020-2024 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ import se.idsec.signservice.integration.core.error.SignServiceIntegrationExcepti
 
 /**
  * Exception handler for the Sign Service Integration service.
- * 
+ *
  * @author Martin Lindström (martin@litsec.se)
  */
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -48,7 +48,7 @@ public class SignServiceIntegrationExceptionHandler extends ResponseEntityExcept
 
   /**
    * Handles exceptions from the SignService Integration API.
-   * 
+   *
    * @param ex
    *          the exception
    * @param request
@@ -84,13 +84,13 @@ public class SignServiceIntegrationExceptionHandler extends ResponseEntityExcept
 
   /**
    * Handles DSS errors from the SignService Integration API.
-   * 
+   *
    * @param ex
    *          the exception
    * @param request
    *          the web request
    * @return a response entity
-   */  
+   */
   @ExceptionHandler(SignResponseErrorStatusException.class)
   protected ResponseEntity<Object> handleDssError(
       final SignResponseErrorStatusException ex, final WebRequest request) {
@@ -139,7 +139,7 @@ public class SignServiceIntegrationExceptionHandler extends ResponseEntityExcept
 
   /**
    * Gets the path attribute.
-   * 
+   *
    * @param request
    *          the request
    * @return the path attribute

@@ -16,7 +16,7 @@ In the cases where a PDF signature page containing a visible PDF signature image
 may use the `prepare` method. This method accepts a PDF document that should be modified with a PDF signature page and information about the attributes that should be added to the PDF signature image.
 
 ```
-1. POST /v1/prepare/default
+1. POST /v1/prepare/default?returnDocReference=true
 
   {
 2.  "pdfDocument" : "JVBERi0xLj...lJUVPRgo=",
@@ -32,13 +32,12 @@ may use the `prepare` method. This method accepts a PDF document that should be 
           }
         },
 4.      "failWhenSignPageFull" : true,
-5.      "insertPageAt" : 0,
-6.      "returnDocumentReference" : true
+5.      "insertPageAt" : 0
       }
   }
 ```
 
-1. The URL for the method is `/v1/prepare/{profile}`, where {profile} is the Signature Service Integration profile policy that is to be used. In this example, the `default` profile is used.
+1. The URL for the method is `/v1/prepare/{profile}`, where {profile} is the Signature Service Integration profile policy that is to be used. In this example, the `default` profile is used.<br /><br />The `returnDocReference` parameter tells the server whether it should return a document reference instead of the entire document as the result. If the server is running in a stateful mode, this is the default.
 
 2. The `pdfDocument` parameter contains the Base64-encoded PDF document to modify.
 
@@ -47,8 +46,6 @@ may use the `prepare` method. This method accepts a PDF document that should be 
 4. A PDF document may be signed several times which means that the PDF signature page will contain several PDF signature images. However, a PDF signature page has a limit on how many signature images it can contain. The `failWhenSignPageFull` setting tells whether the `prepare`-method should fail with an error if there is no more place for a signature image (in an existing PDF signature page), or whether such errors should lead to a signature where no signature image is inserted.
 
 5. The `insertPageAt` gives the page number of the supplied document where the PDF signature page should be inserted. 0 means "as last page".
-
-6. The `returnDocumentReference` setting tells the server whether it should return a document reference instead of the entire document as the result. If the server is running in a stateful mode, this is the default.
 
 See [PreparePdfSignaturePageInput](https://github.com/idsec-solutions/signservice-integration-api/blob/master/src/main/java/se/idsec/signservice/integration/document/pdf/PreparePdfSignaturePageInput.java) for a complete definition of the input object.
 

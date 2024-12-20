@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IDsec Solutions AB
+ * Copyright 2020-2024 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,13 @@
  */
 package se.idsec.signservice.integration.rest.config;
 
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-
-import lombok.Setter;
 import se.idsec.signservice.integration.core.DocumentCache;
 import se.idsec.signservice.integration.core.impl.InMemoryDocumentCache;
 import se.idsec.signservice.integration.rest.cache.RedisDocumentCache;
@@ -32,7 +31,7 @@ import se.idsec.signservice.integration.state.impl.InMemoryIntegrationServiceSta
 
 /**
  * Configuration class for setting up caches.
- * 
+ *
  * @author Martin Lindström
  */
 @Configuration
@@ -50,29 +49,28 @@ public class CacheConfiguration {
 
   /**
    * The Redis template.
-   * 
-   * @param connectionFactory
-   *          the Redis connection factory
+   *
+   * @param connectionFactory the Redis connection factory
    * @return a RedisTemplate bean
    */
   @ConditionalOnProperty(name = "spring.redis.enabled", havingValue = "true", matchIfMissing = false)
   @Bean
   RedisTemplate<String, Object> redisTemplate(final RedisConnectionFactory connectionFactory) {
-    RedisTemplate<String, Object> template = new RedisTemplate<>();
+    final RedisTemplate<String, Object> template = new RedisTemplate<>();
     template.setConnectionFactory(connectionFactory);
     return template;
   }
 
   /**
    * Gets a Redis IntegrationServiceStateCache bean.
-   * 
-   * @param redisTemplate
-   *          the Redis template
+   *
+   * @param redisTemplate the Redis template
    * @return a RedisSignatureStateCache bean
    */
   @ConditionalOnProperty(name = "spring.redis.enabled", havingValue = "true", matchIfMissing = false)
   @Bean
-  public IntegrationServiceStateCache redisIntegrationServiceStateCache(final RedisTemplate<String, Object> redisTemplate) {
+  public IntegrationServiceStateCache redisIntegrationServiceStateCache(
+      final RedisTemplate<String, Object> redisTemplate) {
     final RedisSignatureStateCache cache = new RedisSignatureStateCache(redisTemplate);
     cache.setMaxAge(this.maxStateCacheAge);
     return cache;
@@ -80,9 +78,8 @@ public class CacheConfiguration {
 
   /**
    * Gets a Redis {@link DocumentCache}.
-   * 
-   * @param redisTemplate
-   *          the Redis template
+   *
+   * @param redisTemplate the Redis template
    * @return a RedisDocumentCache bean
    */
   @ConditionalOnProperty(name = "spring.redis.enabled", havingValue = "true", matchIfMissing = false)
@@ -95,7 +92,7 @@ public class CacheConfiguration {
 
   /**
    * Gets an in-memory IntegrationServiceStateCache bean.
-   * 
+   *
    * @return an in-memory IntegrationServiceStateCache bean
    */
   @ConditionalOnProperty(name = "spring.redis.enabled", havingValue = "false", matchIfMissing = true)
@@ -108,7 +105,7 @@ public class CacheConfiguration {
 
   /**
    * Gets an in-memory DocumentCache bean
-   * 
+   *
    * @return an in-memory DocumentCache bean
    */
   @ConditionalOnProperty(name = "spring.redis.enabled", havingValue = "false", matchIfMissing = true)
