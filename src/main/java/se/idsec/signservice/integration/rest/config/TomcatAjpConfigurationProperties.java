@@ -13,8 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package se.idsec.signservice.integration.rest.config;
+
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Factories and converters used to create beans needed.
+ * Configuration properties for Tomcat AJP.
+ *
+ * @author Martin Lindström
  */
-package se.idsec.signservice.integration.rest.config.support;
+@Setter
+@Getter
+@ConfigurationProperties("tomcat.ajp")
+public class TomcatAjpConfigurationProperties {
+
+  /** Is AJP enabled? */
+  private boolean enabled = false;
+
+  /** The Tomcat AJP port. */
+  private int port = 8009;
+
+  /** AJP secret. */
+  private String secret;
+
+  /** Is AJP secret required? */
+  private boolean secretRequired = false;
+
+}

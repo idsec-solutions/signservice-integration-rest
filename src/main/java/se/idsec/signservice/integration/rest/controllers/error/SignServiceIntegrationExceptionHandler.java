@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IDsec Solutions AB
+ * Copyright 2020-2024 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -38,7 +39,7 @@ import se.idsec.signservice.integration.core.error.SignServiceIntegrationExcepti
 
 /**
  * Exception handler for the Sign Service Integration service.
- * 
+ *
  * @author Martin Lindström (martin@litsec.se)
  */
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -47,7 +48,7 @@ public class SignServiceIntegrationExceptionHandler extends ResponseEntityExcept
 
   /**
    * Handles exceptions from the SignService Integration API.
-   * 
+   *
    * @param ex
    *          the exception
    * @param request
@@ -83,13 +84,13 @@ public class SignServiceIntegrationExceptionHandler extends ResponseEntityExcept
 
   /**
    * Handles DSS errors from the SignService Integration API.
-   * 
+   *
    * @param ex
    *          the exception
    * @param request
    *          the web request
    * @return a response entity
-   */  
+   */
   @ExceptionHandler(SignResponseErrorStatusException.class)
   protected ResponseEntity<Object> handleDssError(
       final SignResponseErrorStatusException ex, final WebRequest request) {
@@ -112,10 +113,8 @@ public class SignServiceIntegrationExceptionHandler extends ResponseEntityExcept
     return this.handleExceptionInternal(ex, body, new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
   }
 
-  /** {@inheritDoc} */
   @Override
-  protected ResponseEntity<Object> handleExceptionInternal(
-      final Exception ex, Object body, final HttpHeaders headers, final HttpStatus status, final WebRequest request) {
+  protected ResponseEntity<Object> handleExceptionInternal(final Exception ex, Object body, final HttpHeaders headers, final HttpStatusCode status, final WebRequest request) {
 
     if (body == null) {
       ErrorCode errorCode = null;
@@ -140,7 +139,7 @@ public class SignServiceIntegrationExceptionHandler extends ResponseEntityExcept
 
   /**
    * Gets the path attribute.
-   * 
+   *
    * @param request
    *          the request
    * @return the path attribute

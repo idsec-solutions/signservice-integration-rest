@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IDsec Solutions AB
+ * Copyright 2020-2024 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,23 @@
 package se.idsec.signservice.integration.rest.cache;
 
 import org.springframework.data.redis.core.RedisTemplate;
-
 import se.idsec.signservice.integration.core.DocumentCache;
-import se.idsec.signservice.integration.rest.cache.AbstractRedisIntegrationServiceCache.AbstractRedisCachedObject;
 import se.idsec.signservice.integration.rest.cache.RedisDocumentCache.CachedDocument;
+
+import java.io.Serial;
 
 /**
  * A Redis {@link DocumentCache}.
- * 
+ *
  * @author Martin Lindström
  */
-public class RedisDocumentCache extends AbstractRedisIntegrationServiceCache<String, CachedDocument> implements DocumentCache {
+public class RedisDocumentCache extends AbstractRedisIntegrationServiceCache<String, CachedDocument>
+    implements DocumentCache {
 
   /**
    * Constructor.
-   * 
-   * @param redisTemplate
-   *          the Redis template
+   *
+   * @param redisTemplate the Redis template
    */
   public RedisDocumentCache(final RedisTemplate<String, Object> redisTemplate) {
     super(redisTemplate);
@@ -46,7 +46,8 @@ public class RedisDocumentCache extends AbstractRedisIntegrationServiceCache<Str
 
   /** {@inheritDoc} */
   @Override
-  protected CachedDocument createCacheObject(String id, String object, String ownerId, long expirationTime) {
+  protected CachedDocument createCacheObject(final String id, final String object, final String ownerId,
+      final long expirationTime) {
     return new CachedDocument(id, object, ownerId, expirationTime);
   }
 
@@ -56,6 +57,7 @@ public class RedisDocumentCache extends AbstractRedisIntegrationServiceCache<Str
   public static class CachedDocument extends AbstractRedisCachedObject<String> {
 
     /** For serialization. */
+    @Serial
     private static final long serialVersionUID = -8324998523618078986L;
 
     /**
@@ -66,15 +68,11 @@ public class RedisDocumentCache extends AbstractRedisIntegrationServiceCache<Str
 
     /**
      * An all-args constructor.
-     * 
-     * @param id
-     *          the ID
-     * @param object
-     *          the document
-     * @param ownerId
-     *          the owner ID
-     * @param expirationTime
-     *          the expiration time
+     *
+     * @param id the ID
+     * @param object the document
+     * @param ownerId the owner ID
+     * @param expirationTime the expiration time
      */
     public CachedDocument(final String id, final String object, final String ownerId, final Long expirationTime) {
       super(id, object, ownerId, expirationTime);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IDsec Solutions AB
+ * Copyright 2020-2024 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,17 @@
  */
 package se.idsec.signservice.integration.rest.config;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
-import org.springframework.security.config.annotation.method.configuration.GlobalMethodSecurityConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -36,43 +33,39 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-
-import lombok.Setter;
-import se.idsec.signservice.integration.rest.config.UsersConfigurationProperties.UserEntry;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import se.idsec.signservice.integration.rest.security.PolicyPermissionEvaluator;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Security configuration.
- * 
+ *
  * @author Martin Lindström
  */
 @Configuration
+@EnableConfigurationProperties(IntegrationServiceConfigurationProperties.class)
+@EnableMethodSecurity
 @EnableWebSecurity
 public class SecurityConfiguration {
 
-  @Value("${management.endpoints.web.base-path:/actuator}")
-  @Setter
-  private String actuatorBasePath;
-
-  @Setter
-  @Autowired
-  private UsersConfigurationProperties userConfiguration;
+  private final IntegrationServiceConfigurationProperties properties;
 
   /**
-   * Gets the permission evaluator used to check if a user has permissions on a particular policy.
-   * 
-   * @return the PolicyPermissionEvaluator bean
+   * Constructor.
+   *
+   * @param properties the configuration properties
    */
-  @Bean
-  PolicyPermissionEvaluator policyPermissionEvaluator() {
-    return new PolicyPermissionEvaluator();
+  public SecurityConfiguration(final IntegrationServiceConfigurationProperties properties) {
+    this.properties = properties;
   }
 
   @Bean
   UserDetailsService userDetailsService() {
 
     final List<UserDetails> users = new ArrayList<>();
-    for (final UserEntry u : this.userConfiguration.getUsers()) {
+    for (final IntegrationServiceConfigurationProperties.UserEntry u : this.properties.getUsers()) {
       final List<SimpleGrantedAuthority> authorities = new ArrayList<>();
       for (final String role : u.getRoles()) {
         authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
@@ -86,47 +79,37 @@ public class SecurityConfiguration {
   }
 
   @Bean
-  SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
+  public SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
     http
-        .userDetailsService(this.userDetailsService())
-        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        .and()
-        .csrf().disable()
-        .authorizeRequests()
-        .antMatchers(this.actuatorBasePath + "/**").permitAll()
-        .antMatchers("/actuator/**").permitAll()
-        .antMatchers(HttpMethod.GET, "/v1/version").permitAll()
-        .antMatchers(HttpMethod.GET, "/v1/policy/list", "/v1/policy/get/**").hasAnyRole("USER", "ADMIN")
-        .antMatchers(HttpMethod.POST, "/v1/create/**").hasAnyRole("USER", "ADMIN")
-        .antMatchers(HttpMethod.POST, "/v1/process/**").hasAnyRole("USER", "ADMIN")
-        .antMatchers(HttpMethod.POST, "/v1/prepare/**").hasAnyRole("USER", "ADMIN")
-        .antMatchers("/error").permitAll()
-        .anyRequest().denyAll()
-        .and()
-        .httpBasic();
+        .authorizeHttpRequests(authorize -> authorize
+            .requestMatchers(
+                new AntPathRequestMatcher("/v1/version", HttpMethod.GET.toString()),
+                new AntPathRequestMatcher("/error")
+            ).permitAll()
+            .requestMatchers(
+                new AntPathRequestMatcher("/v1/policy/list"),
+                new AntPathRequestMatcher("/v1/policy/get/**"),
+                new AntPathRequestMatcher("/v1/create/**", HttpMethod.POST.toString()),
+                new AntPathRequestMatcher("/v1/process/**", HttpMethod.POST.toString()),
+                new AntPathRequestMatcher("/v1/prepare/**", HttpMethod.POST.toString())
+            ).hasAnyRole("USER", "ADMIN")
+            .requestMatchers(EndpointRequest.toAnyEndpoint()).permitAll()
+            .anyRequest().authenticated()
+        )
+        .securityContext(sc -> sc.requireExplicitSave(false))
+        .sessionManagement(httpSecuritySessionManagementConfigurer ->
+            httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .csrf(AbstractHttpConfigurer::disable)
+        .httpBasic(httpSecurityHttpBasicConfigurer -> {});
 
     return http.build();
   }
 
-  /**
-   * For setting up security checking on method calls.
-   */
-  @Configuration
-  @EnableGlobalMethodSecurity(prePostEnabled = true)
-  public static class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
-
-    @Setter
-    @Autowired
-    private PolicyPermissionEvaluator policyPermissionEvaluator;
-
-    /** {@inheritDoc} */
-    @Override
-    protected MethodSecurityExpressionHandler createExpressionHandler() {
-      DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
-      expressionHandler.setPermissionEvaluator(this.policyPermissionEvaluator);
-      return expressionHandler;
-    }
+  @Bean
+  static MethodSecurityExpressionHandler expressionHandler() {
+    final DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
+    expressionHandler.setPermissionEvaluator(new PolicyPermissionEvaluator());
+    return expressionHandler;
   }
 
 }

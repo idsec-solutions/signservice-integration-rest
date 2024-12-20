@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IDsec Solutions AB
+ * Copyright 2020-2024 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,21 +15,19 @@
  */
 package se.idsec.signservice.integration.rest.config;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.GenericApplicationContext;
-
-import lombok.Getter;
-import lombok.Setter;
 import se.idsec.signservice.integration.rest.config.support.SigningCredentialProperties;
 import se.swedenconnect.security.credential.PkiCredential;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Configuration for setting up signature credentials.
@@ -37,47 +35,44 @@ import se.swedenconnect.security.credential.PkiCredential;
  * @author Martin Lindström
  */
 @Configuration
-@ConfigurationProperties("signservice")
-public class SignatureCredentialsConfiguration implements InitializingBean {
+@EnableConfigurationProperties
+public class SignatureCredentialsConfiguration {
 
   /** The application context to which we register each credential as a bean. */
-  @Autowired
-  @Setter
-  private GenericApplicationContext context;
+  private final GenericApplicationContext context;
 
-  /** The properties. */
-  @Getter
-  @Setter
-  private List<SigningCredentialProperties> credentials;
-
-  /** The actual signing credentials. */
-  private List<PkiCredential> signingCredentials;
-
-  /**
-   * Gets the {@code signingCredentials} bean.
-   *
-   * @return a list of signing credentials defined
-   */
-  @Bean("signingCredentials")
-  public List<PkiCredential> signingCredentials() {
-    return this.signingCredentials;
+  public SignatureCredentialsConfiguration(final GenericApplicationContext context) {
+    this.context = context;
   }
 
-  /** {@inheritDoc} */
-  @Override
-  public void afterPropertiesSet() throws Exception {
-    if (this.credentials != null && !this.credentials.isEmpty()) {
-      this.signingCredentials = new ArrayList<>();
-      for (final SigningCredentialProperties c : this.credentials) {
+  @Bean("SigningCredentialProperties")
+  @ConfigurationProperties("signservice.credentials")
+  List<SigningCredentialProperties> signingCredentialProperties() {
+    return new ArrayList<>();
+  }
+
+  @Bean("signingCredentials")
+  List<PkiCredential> signingCredentials(
+      @Qualifier("SigningCredentialProperties") final List<SigningCredentialProperties> signingCredentialProperties)
+      throws Exception {
+
+    if (signingCredentialProperties != null && !signingCredentialProperties.isEmpty()) {
+      final List<PkiCredential> signingCredentials = new ArrayList<>();
+      for (final SigningCredentialProperties c : signingCredentialProperties) {
         final PkiCredential credential = c.getSigningCredential();
         String name = credential.getName();
         if (name == null) {
           name = UUID.randomUUID().toString();
         }
-        context.registerBean("SigningCredential." + name, PkiCredential.class, () -> credential);
-        this.signingCredentials.add(credential);
+        this.context.registerBean("SigningCredential." + name, PkiCredential.class, () -> credential);
+        signingCredentials.add(credential);
       }
+      return signingCredentials;
     }
+    else {
+      return Collections.emptyList();
+    }
+
   }
 
 }

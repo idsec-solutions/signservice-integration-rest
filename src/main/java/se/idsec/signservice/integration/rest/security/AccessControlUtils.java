@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IDsec Solutions AB
+ * Copyright 2020-2024 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,14 @@
  */
 package se.idsec.signservice.integration.rest.security;
 
+import org.springframework.security.core.Authentication;
+
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
-import org.springframework.security.core.Authentication;
-
 /**
  * Utility methods for checking access to resources.
- * 
+ *
  * @author Martin Lindström
  */
 public class AccessControlUtils {
@@ -32,14 +32,9 @@ public class AccessControlUtils {
   }
 
   public static Predicate<Authentication> isAdmin = a -> a.getAuthorities().stream()
-    .filter(ga -> ga.getAuthority().equals("ROLE_ADMIN"))
-    .findFirst()
-    .isPresent();
+      .anyMatch(ga -> ga.getAuthority().equals("ROLE_ADMIN"));
 
   public static BiPredicate<Authentication, String> hasPolicyAuthority = (a, p) -> isAdmin.test(a) ||
-      a.getAuthorities().stream()
-        .filter(ga -> ga.getAuthority().equals("POLICY_" + p.toLowerCase()))
-        .findFirst()
-        .isPresent();
+      a.getAuthorities().stream().anyMatch(ga -> ga.getAuthority().equals("POLICY_" + p.toLowerCase()));
 
 }

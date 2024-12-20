@@ -3,7 +3,6 @@
 #
 # Deployment script for the Sandbox environment
 #
-
 REDIS_PORT=6379
 SIGNSERVICE_REST_HTTPS_PORT=9060
 SIGNSERVICE_REST_AJP_PORT=9069
@@ -44,4 +43,3 @@ docker run -d --name signservice-integration-rest --restart=always \
   docker.eidastest.se:5000/signservice-integration-rest
 
 echo Done!
-

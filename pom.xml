@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>signservice-integration-rest</artifactId>
   <groupId>se.idsec.signservice.integration</groupId>
   <packaging>jar</packaging>
-  <version>1.1.1</version>
+  <version>2.3.0-SNAPSHOT</version>
 
   <name>IDsec Solutions :: SignService :: Integration REST Service</name>
   <description>SignService Integration REST Service</description>
@@ -15,14 +15,15 @@
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
       <distribution>repo</distribution>
     </license>
   </licenses>
 
   <scm>
     <connection>scm:git:https://github.com/idsec-solutions/signservice-integration-rest.git</connection>
-    <developerConnection>scm:git:https://github.com/idsec-solutions/signservice-integration-rest.git</developerConnection>
+    <developerConnection>scm:git:https://github.com/idsec-solutions/signservice-integration-rest.git
+    </developerConnection>
     <url>https://github.com/idsec-solutions/signservice-integration-rest/tree/master</url>
   </scm>
 
@@ -49,15 +50,16 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>  
-    <java.version>11</java.version>
-    
-    <sign.api.version>1.3.0</sign.api.version>
-    <spring.boot.version>2.7.10</spring.boot.version>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <java.version>21</java.version>
+
+    <sign.bom.version>2.1.1</sign.bom.version>
+    <sign.api.version>2.3.0</sign.api.version>
+    <sign.integration.version>2.3.0</sign.integration.version>
+    <spring.boot.version>3.4.0</spring.boot.version>
   </properties>
 
   <distributionManagement>
-  <!-- 
     <snapshotRepository>
       <id>ossrh</id>
       <url>https://oss.sonatype.org/content/repositories/snapshots</url>
@@ -66,42 +68,33 @@
       <id>ossrh</id>
       <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
     </repository>
-    -->
-    <snapshotRepository>
-      <id>eidassh</id>
-      <url>https://maven.eidastest.se/artifactory/eidas-snapshot-local</url>
-    </snapshotRepository>
-    <repository>
-      <id>eidasrl</id>
-      <url>https://maven.eidastest.se/artifactory/eidas-release-local</url>
-    </repository>    
   </distributionManagement>
 
   <dependencyManagement>
 
     <dependencies>
-    
+
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
         <version>${spring.boot.version}</version>
         <type>pom</type>
         <scope>import</scope>
-      </dependency>    
+      </dependency>
 
       <dependency>
         <groupId>se.idsec.signservice.commons</groupId>
         <artifactId>signservice-bom</artifactId>
-        <version>1.2.4</version>
+        <version>${sign.bom.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      
+
       <dependency>
         <groupId>se.swedenconnect.security</groupId>
         <artifactId>credentials-support</artifactId>
-        <version>1.2.6</version>
-      </dependency>      
+        <version>1.3.3</version>
+      </dependency>
 
       <dependency>
         <groupId>se.idsec.signservice.integration</groupId>
@@ -114,7 +107,7 @@
       <dependency>
         <groupId>se.idsec.signservice.integration</groupId>
         <artifactId>signservice-integration-impl</artifactId>
-        <version>1.3.4</version>
+        <version>${sign.integration.version}</version>
         <type>jar</type>
         <scope>compile</scope>
       </dependency>
@@ -122,29 +115,38 @@
       <dependency>
         <groupId>se.idsec.signservice.integration</groupId>
         <artifactId>signservice-integration-xml</artifactId>
-        <version>1.3.4</version>
+        <version>${sign.integration.version}</version>
         <type>jar</type>
         <scope>compile</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>se.idsec.signservice.integration</groupId>
-            <artifactId>signservice-integration-impl</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
 
       <dependency>
         <groupId>se.idsec.signservice.integration</groupId>
         <artifactId>signservice-integration-pdf</artifactId>
-        <version>1.3.4</version>
+        <version>${sign.integration.version}</version>
         <type>jar</type>
         <scope>compile</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>se.idsec.signservice.integration</groupId>
-            <artifactId>signservice-integration-impl</artifactId>
-          </exclusion>
-        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>se.idsec.signservice.commons</groupId>
+        <artifactId>signservice-commons</artifactId>
+        <version>2.1.2</version>
+        <type>jar</type>
+        <scope>compile</scope>
+      </dependency>
+
+      <!-- Dependency convergence fixes -->
+      <dependency>
+        <groupId>com.google.errorprone</groupId>
+        <artifactId>error_prone_annotations</artifactId>
+        <version>2.36.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-text</artifactId>
+        <version>1.13.0</version>
       </dependency>
 
     </dependencies>
@@ -152,6 +154,11 @@
   </dependencyManagement>
 
   <dependencies>
+
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -167,7 +174,7 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-redis</artifactId>
@@ -219,17 +226,16 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.10.0</version>
+        <version>3.13.0</version>
         <configuration>
-          <source>${java.version}</source>
-          <target>${java.version}</target>
+          <release>${java.version}</release>
         </configuration>
       </plugin>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>3.2.0</version>
+        <version>3.3.1</version>
         <configuration>
           <delimiters>
             <delimiter>@</delimiter>
@@ -264,13 +270,13 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.0.0</version>
+        <version>3.5.0</version>
         <executions>
           <execution>
             <id>enforce</id>
             <configuration>
               <rules>
-                <dependencyConvergence />
+                <dependencyConvergence/>
               </rules>
             </configuration>
             <goals>
@@ -282,14 +288,69 @@
 
       <!-- Support for Docker -->
       <plugin>
-        <groupId>com.spotify</groupId>
-        <artifactId>dockerfile-maven-plugin</artifactId>
-        <version>1.4.9</version>
+        <groupId>com.google.cloud.tools</groupId>
+        <artifactId>jib-maven-plugin</artifactId>
+        <version>3.4.4</version>
         <configuration>
-          <repository>${DOCKER_REPO}/${project.artifactId}</repository>
-          <tag>latest</tag>
-          <useMavenSettingsForAuth>true</useMavenSettingsForAuth>
+          <from>
+            <image>openjdk:21-jdk-slim</image>
+          </from>
+          <to>
+            <image>${DOCKER_REPO}/idsec/${project.artifactId}</image>
+            <tags>
+              <tag>${project.version}</tag>
+            </tags>
+          </to>
+          <container>
+            <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
+            <jvmFlags>
+              <jvmFlag>-Djava.net.preferIPv4Stack=true</jvmFlag>
+              <jvmFlag>-Dorg.apache.xml.security.ignoreLineBreaks=true</jvmFlag>
+            </jvmFlags>
+            <labels>
+              <org.opencontainers.image.source>
+                https://github.com/idsec-solutions/signservice-integration-rest
+              </org.opencontainers.image.source>
+              <org.opencontainers.image.description>SignService Integration REST</org.opencontainers.image.description>
+              <org.opencontainers.image.licenses>Apache-2.0</org.opencontainers.image.licenses>
+            </labels>
+          </container>
         </configuration>
+        <executions>
+          <execution>
+            <phase>none</phase>
+            <id>local</id>
+            <goals>
+              <goal>dockerBuild</goal>
+            </goals>
+            <configuration>
+              <to>
+                <image>${project.artifactId}</image>
+              </to>
+            </configuration>
+          </execution>
+          <execution>
+            <id>default-cli</id>
+            <phase>none</phase>
+            <goals>
+              <goal>build</goal>
+            </goals>
+            <configuration>
+              <from>
+                <platforms>
+                  <platform>
+                    <os>linux</os>
+                    <architecture>amd64</architecture>
+                  </platform>
+                  <platform>
+                    <os>linux</os>
+                    <architecture>arm64</architecture>
+                  </platform>
+                </platforms>
+              </from>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
 
     </plugins>
@@ -307,27 +368,9 @@
         <plugins>
 
           <plugin>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok-maven-plugin</artifactId>
-            <version>1.18.20.0</version>
-            <executions>
-              <execution>
-                <phase>generate-sources</phase>
-                <goals>
-                  <goal>delombok</goal>
-                </goals>
-                <configuration>
-                  <addOutputDirectory>false</addOutputDirectory>
-                  <sourceDirectory>src/main/java</sourceDirectory>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-
-          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
-            <version>3.2.0</version>
+            <version>3.3.1</version>
             <executions>
               <execution>
                 <phase>process-sources</phase>
@@ -349,7 +392,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>3.3.2</version>
+            <version>3.10.0</version>
             <executions>
               <execution>
                 <id>attach-javadoc</id>
@@ -361,42 +404,27 @@
             <configuration>
               <doctitle>SignService Integration REST Service - ${project.version}</doctitle>
               <windowtitle>SignService Integration REST SERVICE - ${project.version}</windowtitle>
-
-              <sourcepath>target/generated-sources/delombok</sourcepath>
-              <additionalparam>-Xdoclint:all -Xdoclint:-missing</additionalparam>
-              <additionalOptions>-Xdoclint:all -Xdoclint:-missing</additionalOptions>
-              <additionalJOptions>
-                <additionalJOption>-Xdoclint:all</additionalJOption>
-                <additionalJOption>-Xdoclint:-missing</additionalJOption>
-              </additionalJOptions>
+              <doclint>all,-missing</doclint>
               <detectJavaApiLink>true</detectJavaApiLink>
             </configuration>
           </plugin>
 
-<!-- 
           <plugin>
             <groupId>org.sonatype.plugins</groupId>
             <artifactId>nexus-staging-maven-plugin</artifactId>
-            <version>1.6.12</version>
+            <version>1.7.0</version>
             <extensions>true</extensions>
             <configuration>
               <serverId>ossrh</serverId>
               <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-              <autoReleaseAfterClose>false</autoReleaseAfterClose>
-              -->
-              <!-- 
-                Allows manual inspection of the staging repo before deploying it to the central repo. 
-                Use 'mvn nexus-staging:release -Prelease' to release and 'mvn nexus-staging:drop' to abort. 
-              -->
-              <!-- 
+              <autoReleaseAfterClose>true</autoReleaseAfterClose>
             </configuration>
           </plugin>
-          -->
 
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>3.1.0</version>
+            <version>3.2.6</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>

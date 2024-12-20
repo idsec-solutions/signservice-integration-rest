@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IDsec Solutions AB
+ * Copyright 2020-2024 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,15 @@
  */
 package se.idsec.signservice.integration.rest.security;
 
-import java.io.Serializable;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
 
-import lombok.extern.slf4j.Slf4j;
+import java.io.Serializable;
 
 /**
  * A {@link PermissionEvaluator} that is used to check if a user has permission to use a particular SignService policy.
- * 
+ *
  * @author Martin Lindström
  */
 @Slf4j
@@ -34,35 +33,32 @@ public class PolicyPermissionEvaluator implements PermissionEvaluator {
   public static final String USE_PERMISSION = "use";
 
   /** {@inheritDoc} */
-  @Override
   public boolean hasPermission(
       final Authentication authentication, final Object targetDomainObject, final Object permission) {
 
     if (authentication == null || targetDomainObject == null || permission == null) {
       return false;
     }
-    if (!String.class.isInstance(permission)) {
+    if (!(permission instanceof String)) {
       log.error("Unknown permission type: {}", permission.getClass().getSimpleName());
       return false;
     }
-    if (!String.class.cast(permission).equalsIgnoreCase(USE_PERMISSION)) {
+    if (!((String) permission).equalsIgnoreCase(USE_PERMISSION)) {
       log.error("Unknown permission: {}", permission);
       return false;
     }
-    if (!String.class.isInstance(targetDomainObject)) {
+    if (!(targetDomainObject instanceof String)) {
       log.error("Unknown targetDomainObject type: {}", targetDomainObject.getClass().getSimpleName());
       return false;
     }
 
-    return AccessControlUtils.hasPolicyAuthority.test(authentication, String.class.cast(targetDomainObject));
+    return AccessControlUtils.hasPolicyAuthority.test(authentication, (String) targetDomainObject);
   }
 
   /** {@inheritDoc} */
   @Override
-  public boolean hasPermission(
-      final Authentication authentication, final Serializable targetId, final String targetType,
-      final Object permission) {
-
+  public boolean hasPermission(final Authentication authentication, final Serializable targetId,
+      final String targetType, final Object permission) {
     return false;
   }
 

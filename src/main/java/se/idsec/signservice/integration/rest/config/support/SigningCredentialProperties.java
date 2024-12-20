@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IDsec Solutions AB
+ * Copyright 2020-2024 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,10 @@
  */
 package se.idsec.signservice.integration.rest.config.support;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
 import org.springframework.util.Assert;
-
-import lombok.extern.slf4j.Slf4j;
 import se.swedenconnect.security.credential.PkiCredential;
 import se.swedenconnect.security.credential.factory.PkiCredentialConfigurationProperties;
 import se.swedenconnect.security.credential.factory.PkiCredentialFactoryBean;
@@ -35,7 +34,7 @@ public class SigningCredentialProperties extends PkiCredentialConfigurationPrope
   /**
    * Tells how the credential is represented.
    */
-  public static enum CredentialFormat {
+  public enum CredentialFormat {
     /** Credential is stored in a Java KeyStore. */
     KEYSTORE,
 
@@ -56,7 +55,7 @@ public class SigningCredentialProperties extends PkiCredentialConfigurationPrope
 
   /**
    * Deprecated format for credential.
-   * 
+   *
    * @param format the format
    */
   public void setFormat(final CredentialFormat format) {
@@ -69,7 +68,7 @@ public class SigningCredentialProperties extends PkiCredentialConfigurationPrope
   /**
    * The keystore file or private key file. Deprecated - use {@code resource} for a keystore and {@code private-key} for
    * a private key file.
-   * 
+   *
    * @param file the resource
    */
   public void setFile(final Resource file) {
@@ -92,7 +91,7 @@ public class SigningCredentialProperties extends PkiCredentialConfigurationPrope
 
   /**
    * Maps to {@code type}.
-   * 
+   *
    * @param storeType the keystore type
    */
   public void setStoreType(final String storeType) {
@@ -104,7 +103,7 @@ public class SigningCredentialProperties extends PkiCredentialConfigurationPrope
 
   /**
    * Gets a {@link PkiCredential}.
-   * 
+   *
    * @return a {@link PkiCredential}
    * @throws Exception for errors creating the credential
    */

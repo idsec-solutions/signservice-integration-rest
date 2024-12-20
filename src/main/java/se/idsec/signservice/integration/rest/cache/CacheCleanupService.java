@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IDsec Solutions AB
+ * Copyright 2020-2024 IDsec Solutions AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,15 @@
  */
 package se.idsec.signservice.integration.rest.cache;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
 import se.idsec.signservice.integration.core.DocumentCache;
 import se.idsec.signservice.integration.state.IntegrationServiceStateCache;
 
 /**
  * Service for cleaning up expired cache entries.
- * 
+ *
  * @author Martin Lindström
  */
 @Service
@@ -34,14 +31,22 @@ import se.idsec.signservice.integration.state.IntegrationServiceStateCache;
 public class CacheCleanupService {
 
   /** The document cache. */
-  @Setter
-  @Autowired
-  private DocumentCache documentCache;
+  private final DocumentCache documentCache;
 
   /** The state cache. */
-  @Setter
-  @Autowired
-  private IntegrationServiceStateCache signatureStateCache;
+  private final IntegrationServiceStateCache signatureStateCache;
+
+  /**
+   * Constructor.
+   *
+   * @param documentCache the document cache
+   * @param signatureStateCache the state cache
+   */
+  public CacheCleanupService(
+      final DocumentCache documentCache, final IntegrationServiceStateCache signatureStateCache) {
+    this.documentCache = documentCache;
+    this.signatureStateCache = signatureStateCache;
+  }
 
   /**
    * Invokes the {@link DocumentCache#clearExpired()} method periodically.
@@ -52,7 +57,7 @@ public class CacheCleanupService {
       log.trace("Cleaning up expired cached documents ...");
       this.documentCache.clearExpired();
     }
-    catch (Exception e) {
+    catch (final Exception e) {
       log.error("Error during document cache clean up", e);
     }
   }
@@ -66,7 +71,7 @@ public class CacheCleanupService {
       log.trace("Cleaning up expired cached state objects ...");
       this.signatureStateCache.clearExpired();
     }
-    catch (Exception e) {
+    catch (final Exception e) {
       log.error("Error during signature state cache clean up", e);
     }
   }
