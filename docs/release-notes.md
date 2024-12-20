@@ -7,7 +7,7 @@
 
 ## 2.3.0
 
-**Date:** 2024-12-XX
+**Date:** 2024-12-20
 
 ### Java 21 and updated dependencies
 
@@ -25,7 +25,11 @@ PDF related issues were addressed:
 
 ---
 
+**Configuration changes:**
+
 A new policy configuration setting, `pdf-prepare-settings`, has been introduced for how to handle PDF/A consistency and issues concerning open PDF forms, see [PDF Document Prepare Settings](#configuration.html#pdf-document-prepare-settings).
+
+**API changes:**
 
 The PDF prepare call, `/v1/prepare/{policy}`, has been changed so that the `returnDocReference` is set as a query parameter (with a boolean value), instead of as a `returnDocumentReference` field of the `signaturePagePreferences` element in the input data passed to the prepare-method.
 
@@ -70,9 +74,3 @@ The API has also been extended with new error codes, see [Signature Service Inte
 - `error.document.pdf-flatten-acroform-failed` - Failed to flatten existing Acroform in document.
 
 - `error.document.pdf-contains-encryption-dictionary` - PDF document contains an encryption dictionary (and policy is not configured to remove that - `allow-remove-encryption-dictionary` is `false`).
-
-
-
-
-
-
