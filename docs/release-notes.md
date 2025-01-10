@@ -4,6 +4,13 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) 
 
+## 2.3.1
+
+**Date:** -
+
+### Bugfixes
+
+The application would fail to start if values (that have sensisble defaults) were missing. This has been fixed.
 
 ## 2.3.0
 

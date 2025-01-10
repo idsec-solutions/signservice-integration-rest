@@ -15,8 +15,8 @@
  */
 package se.idsec.signservice.integration.rest.config;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -37,6 +37,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import se.idsec.signservice.integration.rest.security.PolicyPermissionEvaluator;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -45,27 +46,16 @@ import java.util.List;
  * @author Martin Lindström
  */
 @Configuration
-@EnableConfigurationProperties(IntegrationServiceConfigurationProperties.class)
 @EnableMethodSecurity
 @EnableWebSecurity
 public class SecurityConfiguration {
 
-  private final IntegrationServiceConfigurationProperties properties;
-
-  /**
-   * Constructor.
-   *
-   * @param properties the configuration properties
-   */
-  public SecurityConfiguration(final IntegrationServiceConfigurationProperties properties) {
-    this.properties = properties;
-  }
-
   @Bean
-  UserDetailsService userDetailsService() {
+  UserDetailsService userDetailsService(
+      @Qualifier("signservice.users") final Collection<UsersConfiguration.UserEntry> users) {
 
-    final List<UserDetails> users = new ArrayList<>();
-    for (final IntegrationServiceConfigurationProperties.UserEntry u : this.properties.getUsers()) {
+    final List<UserDetails> userDetails = new ArrayList<>();
+    for (final UsersConfiguration.UserEntry u : users) {
       final List<SimpleGrantedAuthority> authorities = new ArrayList<>();
       for (final String role : u.getRoles()) {
         authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
@@ -73,9 +63,9 @@ public class SecurityConfiguration {
       for (final String policy : u.getPolicies()) {
         authorities.add(new SimpleGrantedAuthority("POLICY_" + policy.toLowerCase()));
       }
-      users.add(new User(u.getUserId(), u.getPassword(), authorities));
+      userDetails.add(new User(u.getUserId(), u.getPassword(), authorities));
     }
-    return new InMemoryUserDetailsManager(users);
+    return new InMemoryUserDetailsManager(userDetails);
   }
 
   @Bean

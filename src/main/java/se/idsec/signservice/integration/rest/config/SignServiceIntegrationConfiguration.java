@@ -15,19 +15,23 @@
  */
 package se.idsec.signservice.integration.rest.config;
 
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.system.ApplicationTemp;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.io.Resource;
 import se.idsec.signservice.integration.ExtendedSignServiceIntegrationService;
 import se.idsec.signservice.integration.config.ConfigurationManager;
 import se.idsec.signservice.integration.config.impl.DefaultConfigurationManager;
+import se.idsec.signservice.integration.config.impl.DefaultIntegrationServiceConfiguration;
 import se.idsec.signservice.integration.core.DocumentCache;
 import se.idsec.signservice.integration.document.SignedDocumentProcessor;
 import se.idsec.signservice.integration.document.TbsDocumentProcessor;
@@ -43,6 +47,7 @@ import se.idsec.signservice.integration.process.SignResponseProcessingConfig;
 import se.idsec.signservice.integration.process.SignResponseProcessor;
 import se.idsec.signservice.integration.process.impl.DefaultSignRequestProcessor;
 import se.idsec.signservice.integration.process.impl.DefaultSignResponseProcessor;
+import se.idsec.signservice.integration.security.impl.OpenSAMLEncryptionParameters;
 import se.idsec.signservice.integration.security.impl.OpenSAMLIdpMetadataResolver;
 import se.idsec.signservice.integration.signmessage.SignMessageProcessor;
 import se.idsec.signservice.integration.signmessage.impl.DefaultSignMessageProcessor;
@@ -55,7 +60,9 @@ import se.swedenconnect.opensaml.saml2.metadata.provider.MetadataProvider;
 
 import java.io.File;
 import java.security.cert.X509Certificate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Application main configuration.
@@ -63,8 +70,17 @@ import java.util.List;
  * @author Martin Lindström (martin@idsec.se)
  */
 @Configuration
-@EnableConfigurationProperties
+@DependsOn(value = { "SignServiceInitializer",
+    "signingCredentials",
+    "nameToSigningCredentialConverter",
+    "propertyToX509CertificateConverter" })
+@PropertySource("${signservice.integration.policy-configuration-resource}")
+@Slf4j
 public class SignServiceIntegrationConfiguration {
+
+  @Setter
+  @Value("${signservice.default-policy-name:#{null}}")
+  private String defaultPolicyName;
 
   /** Temporary directory for caches. */
   private final ApplicationTemp tempDir = new ApplicationTemp();
@@ -258,17 +274,35 @@ public class SignServiceIntegrationConfiguration {
     return new SignResponseProcessingConfig();
   }
 
+  @Bean("signservice.configuration.map")
+  @ConfigurationProperties("signservice.config")
+  Map<String, DefaultIntegrationServiceConfiguration> configurationMap() {
+    return new HashMap<>();
+  }
+
   /**
    * Gets the SignService {@link ConfigurationManager} bean.
    *
-   * @param properties properties for the configuration
    * @return the ConfigurationManager bean
    */
   @Bean
   ConfigurationManager configurationManager(
-      final IntegrationServiceConfigurationProperties properties) {
-    final DefaultConfigurationManager mgr = new DefaultConfigurationManager(properties.getConfig());
-    mgr.setDefaultPolicyName(properties.getDefaultPolicyName());
+      @Qualifier("signservice.configuration.map") final Map<String, DefaultIntegrationServiceConfiguration> config) {
+
+    for (final Map.Entry<String, DefaultIntegrationServiceConfiguration> e : config.entrySet()) {
+      if (e.getValue().getParentPolicy() == null) {
+        if (e.getValue().getDefaultEncryptionParameters() == null) {
+          e.getValue().setDefaultEncryptionParameters(new OpenSAMLEncryptionParameters());
+        }
+        if (e.getValue().getDefaultSignatureAlgorithm() == null) {
+          e.getValue().setDefaultSignatureAlgorithm("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256");
+        }
+      }
+    }
+    log.info("Integration Service Configuration: {}", config);
+
+    final DefaultConfigurationManager mgr = new DefaultConfigurationManager(config);
+    mgr.setDefaultPolicyName(this.defaultPolicyName);
     return mgr;
   }
 
