@@ -18,6 +18,7 @@ package se.idsec.signservice.integration.rest.security;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 
@@ -27,6 +28,7 @@ import java.io.Serializable;
  * @author Martin Lindström
  */
 @Slf4j
+@Component("evaluator")
 public class PolicyPermissionEvaluator implements PermissionEvaluator {
 
   /** Symbolic constant for the only known permission handled by this evaluator. */
