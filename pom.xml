@@ -293,7 +293,7 @@
         <version>3.4.4</version>
         <configuration>
           <from>
-            <image>openjdk:21-jdk-slim</image>
+            <image>openjdk:21-jdk</image>
           </from>
           <to>
             <image>${DOCKER_REPO}/idsec/${project.artifactId}</image>
