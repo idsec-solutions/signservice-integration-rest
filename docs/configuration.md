@@ -233,4 +233,4 @@ version of this service running under Srping Boot 2.x, make sure to update these
 
 ---
 
-Copyright &copy; 2020-2023, [IDsec Solutions AB](http://www.idsec.se). Licensed under version 2.0 of the [Apache License](http://www.apache.org/licenses/LICENSE-2.0).
+Copyright &copy; 2020-2025, [IDsec Solutions AB](http://www.idsec.se). Licensed under version 2.0 of the [Apache License](http://www.apache.org/licenses/LICENSE-2.0).
