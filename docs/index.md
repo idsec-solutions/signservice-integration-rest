@@ -17,4 +17,4 @@ A RESTful Web Service implementing the [SignService Integration API](https://git
 
 ---
 
-Copyright &copy; 2020-2024, [IDsec Solutions AB](http://www.idsec.se). Licensed under version 2.0 of the [Apache License](http://www.apache.org/licenses/LICENSE-2.0).
+Copyright &copy; 2020-2025, [IDsec Solutions AB](http://www.idsec.se). Licensed under version 2.0 of the [Apache License](http://www.apache.org/licenses/LICENSE-2.0).
