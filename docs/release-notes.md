@@ -12,6 +12,8 @@
 
 The application would fail to start if values (that have sensisble defaults) were missing. This has been fixed.
 
+PolicyPermissionEvaluator did not load as bean by Spring. This has been fixed by appropriate annotation settings.
+
 ## 2.3.0
 
 **Date:** 2024-12-20
