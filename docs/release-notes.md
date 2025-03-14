@@ -4,6 +4,14 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) 
 
+## 2.3.2
+
+**Date:** 2025-03-14
+
+### Formatting of signing time indications in PDF signature pages
+
+It is now possible to specify the time zone and the date format for the signing time strings included in PDF signing pages. See documentation for `time-zone-id` and `date-format` in section [3.1](configuration.html#pdf-signature-image-templates) in the [signservice-integration-rest - Configuration](configuration.html) page.
+
 ## 2.3.1
 
 **Date:** 2025-01-16

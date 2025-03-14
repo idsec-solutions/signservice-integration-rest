@@ -139,6 +139,8 @@ For this purpose the setting `parent-policy` can be used. The value should be th
 | `include-signer-name` | Whether to include the signer's name in the image (true/false). |
 | `include-signing-time` | Whether to include the signing time in the image (true/false). |
 | `fields.<key>` | Dynamic fields to be included. |
+| `time-zone-id` | The time zone to use when including signing time (`include-signing-time`). The default is the system's default time zone. Use Java's constants for zone ID:s, for example "Europe/Stockholm" or "UTC". |
+| `date-format` | The Java date format template to use when formatting signing time. The default is `yyyy-MM-dd HH:mm z`. See Java documentation for valid format strings. |
 
 <a name="pdf-signature-pages"></a>
 ### 3.2. PDF Signature Pages
