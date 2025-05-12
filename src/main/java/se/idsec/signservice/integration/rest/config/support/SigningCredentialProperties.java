@@ -15,6 +15,7 @@
  */
 package se.idsec.signservice.integration.rest.config.support;
 
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
@@ -66,7 +67,7 @@ public class SigningCredentialProperties extends PkiCredentialConfigurationPrope
   }
 
   /**
-   * The keystore file or private key file. Deprecated - use {@code resource} for a keystore and {@code private-key} for
+   * The keystore file or private key file. Deprecated - use {@code resource} for a keystore and {@code private-key} for
    * a private key file.
    *
    * @param file the resource
@@ -101,21 +102,9 @@ public class SigningCredentialProperties extends PkiCredentialConfigurationPrope
     }
   }
 
-  /**
-   * Gets a {@link PkiCredential}.
-   *
-   * @return a {@link PkiCredential}
-   * @throws Exception for errors creating the credential
-   */
-  public PkiCredential getSigningCredential() throws Exception {
-    final PkiCredentialFactoryBean factory = new PkiCredentialFactoryBean(this);
-    factory.afterPropertiesSet();
-    return factory.getObject();
-  }
-
   /** {@inheritDoc} */
   @Override
-  public void afterPropertiesSet() throws Exception {
+  public void afterPropertiesSet() throws IllegalArgumentException {
     if (this.format == null) {
       this.format = CredentialFormat.KEYSTORE;
     }
@@ -132,6 +121,7 @@ public class SigningCredentialProperties extends PkiCredentialConfigurationPrope
         this.setResource(this.file);
       }
     }
+    super.afterPropertiesSet();
   }
 
 }
