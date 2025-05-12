@@ -23,11 +23,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.GenericApplicationContext;
 import se.idsec.signservice.integration.rest.config.support.SigningCredentialProperties;
 import se.swedenconnect.security.credential.PkiCredential;
+import se.swedenconnect.security.credential.factory.PkiCredentialFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Configuration for setting up signature credentials.
@@ -41,8 +41,12 @@ public class SignatureCredentialsConfiguration {
   /** The application context to which we register each credential as a bean. */
   private final GenericApplicationContext context;
 
-  public SignatureCredentialsConfiguration(final GenericApplicationContext context) {
+  private final PkiCredentialFactory credentialFactory;
+
+  public SignatureCredentialsConfiguration(
+      final GenericApplicationContext context, final PkiCredentialFactory credentialFactory) {
     this.context = context;
+    this.credentialFactory = credentialFactory;
   }
 
   @Bean("SigningCredentialProperties")
@@ -56,15 +60,19 @@ public class SignatureCredentialsConfiguration {
       @Qualifier("SigningCredentialProperties") final List<SigningCredentialProperties> signingCredentialProperties)
       throws Exception {
 
+    for (final SigningCredentialProperties signingCredentialProperty : signingCredentialProperties) {
+      signingCredentialProperty.afterPropertiesSet();
+    }
+
     if (signingCredentialProperties != null && !signingCredentialProperties.isEmpty()) {
       final List<PkiCredential> signingCredentials = new ArrayList<>();
       for (final SigningCredentialProperties c : signingCredentialProperties) {
-        final PkiCredential credential = c.getSigningCredential();
-        String name = credential.getName();
-        if (name == null) {
-          name = UUID.randomUUID().toString();
+        final PkiCredential credential = this.credentialFactory.createCredential(c);
+        final String name = credential.getName();
+        if (name != null) {
+          this.context.registerBean("SigningCredential." + name.replaceAll("\\s", ""), PkiCredential.class,
+              () -> credential);
         }
-        this.context.registerBean("SigningCredential." + name, PkiCredential.class, () -> credential);
         signingCredentials.add(credential);
       }
       return signingCredentials;

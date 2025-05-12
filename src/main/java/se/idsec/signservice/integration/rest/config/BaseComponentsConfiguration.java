@@ -20,8 +20,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import se.idsec.signservice.integration.config.spring.NameToSigningCredentialConverter;
-import se.idsec.signservice.integration.config.spring.PropertyToX509CertificateConverter;
 
 /**
  * Configuration for base beans.
@@ -54,17 +52,6 @@ public class BaseComponentsConfiguration {
   @ConfigurationPropertiesBinding
   NameToSigningCredentialConverter nameToSigningCredentialConverter() {
     return new NameToSigningCredentialConverter();
-  }
-
-  /**
-   * Creates (and registers) the {@link PropertyToX509CertificateConverter} converter.
-   *
-   * @return a PropertyToX509CertificateConverter
-   */
-  @Bean("propertyToX509CertificateConverter")
-  @ConfigurationPropertiesBinding
-  PropertyToX509CertificateConverter propertyToX509CertificateConverter() {
-    return new PropertyToX509CertificateConverter();
   }
 
 }

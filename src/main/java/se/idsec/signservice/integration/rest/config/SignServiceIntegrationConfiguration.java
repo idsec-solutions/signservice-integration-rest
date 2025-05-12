@@ -72,8 +72,8 @@ import java.util.Map;
 @Configuration
 @DependsOn(value = { "SignServiceInitializer",
     "signingCredentials",
-    "nameToSigningCredentialConverter",
-    "propertyToX509CertificateConverter" })
+    "nameToSigningCredentialConverter"
+})
 @PropertySource("${signservice.integration.policy-configuration-resource}")
 @Slf4j
 public class SignServiceIntegrationConfiguration {
