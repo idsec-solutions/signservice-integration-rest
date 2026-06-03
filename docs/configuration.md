@@ -222,17 +222,17 @@ If the SignService Integration service is running in a stateful mode it needs to
 Note: As of Spring Boot 3, the property names have changed from `spring.redis` to `spring.data.redis`. When upgrading from an old
 version of this service running under Srping Boot 2.x, make sure to update these property settings to the new names.
 
-| Property                          | Description | Default | 
-|:----------------------------------| :--- | :--- |
+| Property | Description | Default | 
+| :--- | :--- | :--- |
 | `spring.data.redis.cluster.nodes` | Comma-separated list of "host:port" pairs to bootstrap from. This represents an "initial" list of cluster nodes and is required to have at least one entry. |
-| `spring.data.redis.database`           | Database index used by the connection factory. | `0.0` |
-| `spring.data.redis.host`               | Redis server host. | - |
-| `spring.data.redis.port`               | Redis server port. | `6379` |
-| `spring.data.redis.password`           | `Login password of the redis server. | - |
-| `spring.data.redis.timeout`            | Connection timeout (in millis). | *No timeout* |
-| `spring.data.redis.ssl`                | Whether to enable TLS support. | `false` |
-| `spring.data.redis.url`                | Connection URL. Overrides host, port, and password. User is ignored. Example: `redis://user:password@example.com:6379` | - |
+| `spring.data.redis.database` | Database index used by the connection factory. | `0.0` |
+| `spring.data.redis.host` | Redis server host. | - |
+| `spring.data.redis.port` | Redis server port. | `6379` |
+| `spring.data.redis.password` | `Login password of the redis server. | - |
+| `spring.data.redis.timeout`  | Connection timeout (in millis). | *No timeout* |
+| `spring.data.redis.ssl` | Whether to enable TLS support. | `false` |
+| `spring.data.redis.url` | Connection URL. Overrides host, port, and password. User is ignored. Example: `redis://user:password@example.com:6379` | - |
 
 ---
 
-Copyright &copy; 2020-2025, [IDsec Solutions AB](http://www.idsec.se). Licensed under version 2.0 of the [Apache License](http://www.apache.org/licenses/LICENSE-2.0).
+Copyright &copy; 2020-2026, [IDsec Solutions AB](http://www.idsec.se). Licensed under version 2.0 of the [Apache License](http://www.apache.org/licenses/LICENSE-2.0).
