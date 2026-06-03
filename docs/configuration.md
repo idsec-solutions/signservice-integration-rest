@@ -9,6 +9,8 @@
 ## Table of contents
 
 1. [**Application Settings**](#application-settings)
+
+    1.1. [SignMessage Settings](#signmessage-settings)
     
 2. [**Credentials Configuration**](#credentials-configuration)
     
@@ -31,7 +33,7 @@
 <a name="application-settings"></a>
 ## 1. Application Settings
 
-This section covers the Spring Boot-settings for the application.
+This section covers the Spring Boot- and generic application settings.
 
 | Property | Description | Default |
 | :--- | :--- | :--- |
@@ -55,6 +57,23 @@ This section covers the Spring Boot-settings for the application.
 | `management.ssl.key-store-type` | The keystore type. JKS or PKCS12. | `${server.ssl.key-store-type}` |
 | `management.ssl.key-alias` | The keystore alias to the key entry. | `${server.ssl.key-alias}` |
 | `management.endpoints.`<br />`web.exposure.include` | A comma-separated list of the management endpoints to expose. | `health` |
+
+<a name="signmessage-settings"></a>
+### 1.1. SignMessage Settings
+
+In order to enable including SignMessage elements in the requests the `signservice.sign-message.enabled` setting 
+must be set to `true`.
+
+If sending encrypted SignMessage elements should be supported the `signservice.sign-message.metadata.url` and
+`signservice.sign-message.metadata.validation-certificate` must be assigned. The `url` setting points at the metadata
+location where the IdP:s metadata can be found and the `validation-certificate` setting is a resource to the
+signing certificate for the metadata.
+
+```
+signservice.sign-message.enabled=true
+signservice.sign-message.metadata.url=https://eid.svelegtest.se/metadata/mdx/role/idp.xml
+signservice.sign-message.metadata.validation-certificate=file:/opt/signservice/keys/sandbox-metadata.crt
+```
 
 <a name="credentials-configuration"></a>
 ## 2. Credentials Configuration
@@ -224,7 +243,7 @@ version of this service running under Srping Boot 2.x, make sure to update these
 
 | Property | Description | Default | 
 | :--- | :--- | :--- |
-| `spring.data.redis.cluster.nodes` | Comma-separated list of "host:port" pairs to bootstrap from. This represents an "initial" list of cluster nodes and is required to have at least one entry. |
+| `spring.data.redis.cluster.nodes` | Comma-separated list of "host:port" pairs to bootstrap from. This represents an "initial" list of cluster nodes and is required to have at least one entry. | - |
 | `spring.data.redis.database` | Database index used by the connection factory. | `0.0` |
 | `spring.data.redis.host` | Redis server host. | - |
 | `spring.data.redis.port` | Redis server port. | `6379` |
