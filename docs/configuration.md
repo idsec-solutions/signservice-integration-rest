@@ -239,9 +239,9 @@ If the SignService Integration service is running in a stateful mode it needs to
 #### 3.5.1. Redis Configuration
 
 Note: As of Spring Boot 3, the property names have changed from `spring.redis` to `spring.data.redis`. When upgrading from an old
-version of this service running under Srping Boot 2.x, make sure to update these property settings to the new names.
+version of this service running under Spring Boot 2.x, make sure to update these property settings to the new names.
 
-| Property | Description | Default | 
+| Property | Description | Default |
 | :--- | :--- | :--- |
 | `spring.data.redis.cluster.nodes` | Comma-separated list of "host:port" pairs to bootstrap from. This represents an "initial" list of cluster nodes and is required to have at least one entry. | - |
 | `spring.data.redis.database` | Database index used by the connection factory. | `0.0` |
