@@ -4,6 +4,14 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) 
 
+## 2.4.0
+
+**Date:** 2026-06-17
+
+### Document size increased significantly on first sign
+
+The bug described in [Issue #85](https://github.com/idsec-solutions/signservice-integration/issues/85) was fixed.
+
 ## 2.3.2
 
 **Date:** 2025-03-14
