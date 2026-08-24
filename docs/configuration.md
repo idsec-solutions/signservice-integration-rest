@@ -28,6 +28,10 @@
     
     5.1. [Redis Configuration](#redis-configuration)
 
+6. [**JSON Parsing Limits**](#json-parsing-limits)
+
+    6.1. [Sizing the Limit](#sizing-the-limit)
+
 ---
 
 <a name="application-settings"></a>
@@ -251,6 +255,83 @@ version of this service running under Spring Boot 2.x, make sure to update these
 | `spring.data.redis.timeout`  | Connection timeout (in millis). | *No timeout* |
 | `spring.data.redis.ssl` | Whether to enable TLS support. | `false` |
 | `spring.data.redis.url` | Connection URL. Overrides host, port, and password. User is ignored. Example: `redis://user:password@example.com:6379` | - |
+
+<a name="json-parsing-limits"></a>
+### 3.6. JSON Parsing Limits
+
+Clients post the documents to be signed as Base64-encoded **single JSON string values** (see `SignRequestInput`,
+`PreparePdfSignaturePageInput.pdfDocument` and `ProcessSignResponseInput`). The JSON parser used by the service,
+Jackson, guards against oversized input with a set of streaming read limits, and the one that matters here is the
+maximum length of a single string value. Its built-in default is 20,000,000 characters.
+
+Base64 inflates content by roughly 4/3, so a raw document of about 15 MB already produces a JSON string value longer
+than 20,000,000 characters — and for a stateless policy the effective ceiling is lower still, see
+[3.6.1](#sizing-the-limit). When a limit is exceeded the request is rejected while it is still being parsed — before
+any service logic sees it — and the client receives an HTTP 400 that does *not* use this service's normal error body:
+
+```json
+{"type":"about:blank","title":"Bad Request","status":400,"detail":"Failed to read request","instance":"/v1/prepare/sandbox"}
+```
+
+Note that the response gives no indication that a size limit was the cause, and nothing is written to the service log
+either. An unexplained `Failed to read request` on a request carrying a large document is therefore the symptom to
+look for.
+
+Note that this is a completely separate limit from `spring.servlet.multipart.max-request-size` and the Tomcat size
+settings; raising those has no effect on it.
+
+The setting below lets a deployment raise (or lower) this limit.
+
+| Property | Description | Default |
+| :--- | :--- | :--- |
+| `signservice.json.max-string-length` | The maximum length, in characters, of a single JSON string value. This is what limits the largest document the service will accept. See the sizing rule below. | `20000000` (the jackson-core default) |
+
+The limit applies both when a request is parsed and when the signature state is parsed back during `/v1/process`, so a
+raised value covers a full signature flow. No other Jackson setting is affected — the remaining read limits keep their
+jackson-core defaults, as do serialization and deserialization features, registered modules and date handling.
+
+<a name="sizing-the-limit"></a>
+#### 3.6.1. Sizing the Limit
+
+A signature flow parses the document twice, and for a **stateless** policy the second parse is the larger of the two.
+`/v1/create` returns the session state to the client, and that state contains the Base64-encoded document — but the
+state as a whole is then Base64-encoded again before it is handed over. The `encodedState` string that the client
+posts back to `/v1/process` therefore carries a *second* 4/3 inflation on top of the first:
+
+| Parse | String that must fit | Size relative to the raw document |
+| :--- | :--- | :--- |
+| `/v1/create` request body | the document, Base64-encoded | × 4/3 |
+| `/v1/process` request body | `encodedState` — Base64 of a state that contains the Base64 document | × 16/9 (≈ 1.78) |
+
+**Size against the second row.** The rule is:
+
+> `max-string-length` ≥ *(largest document in bytes)* × 16/9, plus headroom.
+
+Getting this wrong is easy to miss, because the two parses fail at different document sizes and the first one keeps
+working. With the default of 20,000,000 the request parse accepts documents up to roughly 15 MB, but a stateless
+`/v1/process` starts failing at roughly 11 MB — so a document between those sizes produces a successful `/v1/create`
+followed by a `Failed to read request` on `/v1/process`.
+
+For a **stateful** policy the state is held server-side and the client posts back only an identifier, so only the
+× 4/3 row applies.
+
+Whether a policy is stateless is controlled by the `stateless` setting of the policy configuration, i.e.,
+`signservice.config.<p>.stateless`, see [3. Policy Configuration](#policy-configuration). **The eduSign deployment is
+stateless**, so the × 16/9 rule is the one to size against there.
+
+**Example** — accepting documents of up to about 50 MB with a stateless policy:
+
+```
+signservice.json.max-string-length=90000000
+```
+
+> **A warning about oversized values.** Do not set `max-string-length` to `Integer.MAX_VALUE` in order to "turn the
+> limit off". The value is accepted, but it removes the guard rather than raising it: instead of a clean parse error,
+> an oversized payload then fails part-way through parsing with an `OutOfMemoryError` or a VM array-size error, which
+> is far harder to diagnose and can take the service down rather than failing a single request. Decoded text is held
+> as a `char[]` at two bytes per character, so a value of 2 billion characters alone requires roughly 4 GB of heap.
+> Size the limit to the largest document the deployment actually intends to accept, add headroom, and check the
+> result against the heap available to the container.
 
 ---
 
