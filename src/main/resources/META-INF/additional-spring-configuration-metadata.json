@@ -50,6 +50,11 @@
     "description": "The document cache cleanup internal (in milliseconds)"
   },
   {
+    "name": "signservice.json.max-string-length",
+    "type": "java.lang.Integer",
+    "description": "Maximum length of a single JSON string value when parsing incoming JSON. Documents are posted Base64-encoded as JSON string values, so this limits the largest document that can be accepted. Defaults to the jackson-core default (20000000)"
+  },
+  {
     "name": "spring.redis.enabled",
     "type": "java.lang.Boolean",
     "description": "Whether Redis is enabled"

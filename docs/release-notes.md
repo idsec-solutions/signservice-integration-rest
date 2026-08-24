@@ -4,6 +4,43 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) 
 
+## 2.4.1
+
+**Date:** 2026-08-24
+
+### Configurable JSON parsing limit for large documents
+
+Documents are sent to the service Base64-encoded inside a single JSON string value. Jackson, the JSON parser used by
+the service, limits such a value to 20,000,000 characters by default, and since Base64 inflates content by roughly 4/3
+this meant that documents larger than about 15 MB were rejected while the request was still being parsed — before any
+signature logic saw them. The failure surfaced as an unexplained HTTP 400 `Failed to read request` and could not be
+worked around through configuration, since raising `spring.servlet.multipart.max-request-size` has no effect on this
+limit.
+
+This limit is now configurable. To accept documents of up to about 50 MB with a stateless policy:
+
+```
+signservice.json.max-string-length=90000000
+```
+
+The setting also applies to the signature state that is parsed back when a sign response is processed, so both
+`/v1/create` and `/v1/process` accept the larger document. A deployment that sets nothing keeps the previous
+behaviour.
+
+Note when picking a value that for a stateless policy the state posted back to `/v1/process` is Base64-encoded a
+second time, making it about 16/9 of the raw document size rather than 4/3. Size against that figure — otherwise
+`/v1/create` succeeds and the matching `/v1/process` call fails. See the configuration page for the full sizing rule.
+
+Size the value to the largest document the deployment intends to accept and check it against the container's heap —
+setting it to `Integer.MAX_VALUE` removes the guard rather than raising it and turns an oversized request into an
+`OutOfMemoryError`.
+
+**Configuration changes:**
+
+The new `signservice.json.max-string-length` setting is described in
+[JSON Parsing Limits](configuration.html#json-parsing-limits) in the
+[signservice-integration-rest - Configuration](configuration.html) page.
+
 ## 2.4.0
 
 **Date:** 2026-06-17
